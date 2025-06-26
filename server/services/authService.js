@@ -1,5 +1,8 @@
 const User = require('../models/user');
 const { AppError } = require('../utils/error');
+const { hashString } = require('../utils/hashString');
+const { verifyJwtToken } = require('../utils/jwtAuth');
+const { setRedisCache } = require('../config/redis');
 
 
 // function to create a new user
@@ -48,7 +51,35 @@ const getUserByEmail = async (email) => {
 };
 
 
+// revoke token service
+const revokeTokenService = async (token) => {
+    try {
+        const decoded = verifyJwtToken(token);
+        if (!decoded) {
+            throw new AppError('Invalid token', 401);
+        }
+        // hash token for verification
+        const hashedToken = hashString(token);
+        if (!hashedToken) {
+            throw new AppError('An error occurred while hashing the token', 500);
+        }
+        // calculate expiry time for the token
+        const ttl = Math.floor((decoded.exp - Date.now() / 1000) * 1000); // convert to milliseconds
+        // store the hashed token in Redis with a TTL
+        await setRedisCache(hashedToken, 'revoked', ttl);
+
+        return true; // return true if token is revoked successfully
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error revoking token:', error);
+        throw new AppError('Error revoking token', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserService, getUserByEmail
+    createUserService, getUserByEmail, revokeTokenService
 };

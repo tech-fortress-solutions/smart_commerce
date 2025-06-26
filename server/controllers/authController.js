@@ -1,5 +1,5 @@
 const { AppError } = require('../utils/error');
-const { createUserService, getUserByEmail } = require('../services/authService');
+const { createUserService, getUserByEmail, revokeTokenService } = require('../services/authService');
 const { validateEmail, validateGender, validatePassword, validatePhone } = require('../utils/validators');
 const { hashPassword, verifyPassword } = require('../utils/hashPassword');
 const { createJwtToken, verifyJwtToken } = require('../utils/jwtAuth');
@@ -51,7 +51,7 @@ const createUserController = async (req, res, next) => {
         // create JWT token
         let token;
         try {
-            token = createJwtToken( user.toObject());
+            token = createJwtToken( user.toObject(), '1d'); // token valid for 1 day
         } catch (err) {
             return next(new AppError('Failed to create JWT token', 500));
         }
@@ -113,7 +113,7 @@ const loginUserController = async (req, res, next) => {
         // create JWT token
         let token;
         try {
-            token = createJwtToken(user.toObject());
+            token = createJwtToken(user.toObject(), '1d'); // token valid for 1 day
         }
         catch (err) {
             return next(new AppError('Failed to create JWT token', 500));
@@ -147,7 +147,38 @@ const loginUserController = async (req, res, next) => {
 };
 
 
+// logout user controller
+const logoutUserController = async (req, res, next) => {
+    try {
+        const token = req.cookies.token;
+
+        // clear the token cookie
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            sameSite: 'Strict' // Prevent CSRF attacks
+        });
+
+        // revoke the token in Redis cache
+        const isRevoked = await revokeTokenService(token);
+        if (!isRevoked) {
+            return next(new AppError('Failed to revoke token', 500));
+        }
+        return res.status(200).json({
+            status: "success",
+            message: "User logged out successfully"
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in logoutUserController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserController, loginUserController
+    createUserController, loginUserController, logoutUserController
 };
