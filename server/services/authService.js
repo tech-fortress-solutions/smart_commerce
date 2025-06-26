@@ -30,7 +30,25 @@ const createUserService = async (userData) => {
 };
 
 
+// get user by email
+const getUserByEmail = async (email) => {
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+        return user;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error fetching user by email:', error);
+        throw new AppError('Error fetching user', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserService,
+    createUserService, getUserByEmail
 };
