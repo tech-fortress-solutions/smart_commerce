@@ -1,8 +1,10 @@
 const { AppError } = require('../utils/error');
-const { createUserService, getUserByEmail, revokeTokenService } = require('../services/authService');
+const { createUserService, getUserByEmail, revokeTokenService, updateUserAccount } = require('../services/authService');
 const { validateEmail, validateGender, validatePassword, validatePhone } = require('../utils/validators');
 const { hashPassword, verifyPassword } = require('../utils/hashPassword');
 const { createJwtToken, verifyJwtToken } = require('../utils/jwtAuth');
+const { generateResetPasswordTemplate } = require('../templates/resetPassword');
+const { addEmailJob } = require('../jobs/email/queue');
 
 
 // create user controller
@@ -178,7 +180,55 @@ const logoutUserController = async (req, res, next) => {
 };
 
 
+// forgot password controller
+const forgotPasswordController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return next(new AppError('Email is required', 400));
+        }
+
+        // validate email
+        if (!validateEmail(email)) {
+            return next(new AppError('Invalid email address', 400));
+        }
+
+        // get user by email
+        const user = await getUserByEmail(email);
+        if (user) {
+            // create reset token
+            const resetToken = createJwtToken({ email: user.email, id: user._id }, '10m'); // token valid for 10 minutes
+            if (!resetToken) {
+                return next(new AppError('Failed to create reset token', 500));
+            }
+            // send reset email
+            const resetUrl = `${process.env.FRONTEND_URL}/api/auth/user/password/reset?token=${resetToken}`;
+            const emailData = {
+                to: user.email,
+                subject: 'Password Reset Request',
+                from: "noreply@thebigphotocontest.com",
+                text: 'You requested a password reset. Click the link below to reset your password:',
+                html: generateResetPasswordTemplate(resetUrl, user.firstname)
+            };
+            // add email job to queue
+            await addEmailJob(emailData);
+        }
+        // respond with success message
+        return res.status(200).json({
+            status: "success",
+            message: "If this email is registered, you will receive a password reset link shortly."
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in forgotPasswordController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserController, loginUserController, logoutUserController
+    createUserController, loginUserController, logoutUserController, forgotPasswordController,
 };

@@ -79,7 +79,33 @@ const revokeTokenService = async (token) => {
 };
 
 
+// update user account
+const updateUserAccount = async (email, updateData) => {
+    try {
+        // find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        // update user data
+        Object.keys(updateData).forEach(key => {
+            user[key] = updateData[key];
+        });
+        // save updated user
+        const updatedUser = await user.save();
+        return updatedUser;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error updating user account:', error);
+        throw new AppError('Error updating user account', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserService, getUserByEmail, revokeTokenService
+    createUserService, getUserByEmail, revokeTokenService, updateUserAccount,
 };
