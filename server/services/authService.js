@@ -54,9 +54,13 @@ const getUserByEmail = async (email) => {
 // revoke token service
 const revokeTokenService = async (token) => {
     try {
-        const decoded = verifyJwtToken(token);
-        if (!decoded) {
-            throw new AppError('Invalid token', 401);
+        let decoded;
+        try {
+            // verify JWT token
+            decoded = verifyJwtToken(token);
+        } catch (err) {
+            console.error('JWT verification error:', err);
+            throw new AppError('Error revoking token, invalid token', 401);
         }
         // hash token for verification
         const hashedToken = hashString(token);

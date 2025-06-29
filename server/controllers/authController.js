@@ -228,7 +228,68 @@ const forgotPasswordController = async (req, res, next) => {
 };
 
 
+// reset password controller
+const resetPasswordController = async (req, res, next) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return next(new AppError('Reset token is required', 400));
+        }
+
+        const { password, confirmPassword } = req.body;
+        if (!password || !validatePassword(password)) {
+            return next(new AppError('Invalid password', 400));
+        }
+        if (password !== confirmPassword) {
+            return next(new AppError('Passwords do not match', 400));
+        }
+
+        // verify reset token
+        let decoded;
+        try {
+            decoded = verifyJwtToken(token);
+        } catch (err) {
+            console.error('JWT verification error:', err);
+            return next(new AppError('Invalid reset token', 401));
+        }
+
+        // get user by email
+        const user = await getUserByEmail(decoded.email);
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        // hash new password
+        const hashedPassword = await hashPassword(password);
+
+        // update user password
+        const updatedUser = await updateUserAccount(user.email, { password: hashedPassword });
+        if (!updatedUser) {
+            return next(new AppError('Failed to update password', 500));
+        }
+
+        // revpoke the reset token
+        const isRevoked = await revokeTokenService(token);
+        if (!isRevoked) {
+            return next(new AppError('Failed to revoke reset token', 500));
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Password reset successfully. You can now log in with your new password."
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in resetPasswordController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
 // export functions
 module.exports = {
     createUserController, loginUserController, logoutUserController, forgotPasswordController,
+    resetPasswordController,
 };
