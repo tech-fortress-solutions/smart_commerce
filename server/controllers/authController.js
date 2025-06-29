@@ -288,8 +288,61 @@ const resetPasswordController = async (req, res, next) => {
 };
 
 
+// update user account controller
+const updateUserAccountController = async (res, req, next) => {
+    try {
+        const user = req.user; // user is attached to request object by auth middleware
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        const updateData = req.body;
+        // validate input
+        if (updateData.email && !validateEmail(updateData.email)) {
+            return next(new AppError('Invalid email address', 400));
+        }
+        if (updateData.phone && !validatePhone(updateData.phone)) {
+            return next(new AppError('Invalid phone number', 400));
+        }
+        if (updateData.gender && !validateGender(updateData.gender)) {
+            return next(new AppError("Gender must either be male or female", 400));
+        }
+        if (updateData.password && !validatePassword(updateData.password)) {
+            return next(new AppError('Password must be 8 characters long, contain a lower case, upper case,a number and a special characters', 400));
+        }
+        // verify old password, if password is being updated
+        if (updateData.password && updateData.oldPassword) {
+            const isPasswordValid = await verifyPassword(updateData.oldPassword, user.password);
+            if (!isPasswordValid) {
+                return next(new AppError('Invalid old password', 401));
+            }
+        }
+
+        // update user account
+        const updatedUser = await updateUserAccount(user.email, updateData);
+        if (!updatedUser) {
+            return next(new AppError('Failed to update user account', 500));
+        }
+        // delete password from response
+        updatedUser.password = undefined;
+
+        return res.status(200). json({
+            status: "success",
+            message: "User account updated successfully",
+            user: updatedUser.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in updateUserAccountController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
 // export functions
 module.exports = {
     createUserController, loginUserController, logoutUserController, forgotPasswordController,
-    resetPasswordController,
+    resetPasswordController, updateUserAccountController,
 };
