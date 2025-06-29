@@ -25,12 +25,12 @@ const verifyJwtToken = (token) => {
         return decoded;
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            throw new Error('Token has expired');
+            throw new AppError('Token has expired', 400);
         }
         if (error.name === 'JsonWebTokenError') {
-            throw new Error('Invalid token');
+            throw new AppError('Invalid token', 400);
         }
-        throw new Error('Error verifying token: ' + error.message);
+        throw new AppError('Error verifying token: ' + error.message, 400);
     }
 };
 

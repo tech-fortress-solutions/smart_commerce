@@ -1,8 +1,10 @@
 const { AppError } = require('../utils/error');
-const { createUserService, getUserByEmail } = require('../services/authService');
+const { createUserService, getUserByEmail, revokeTokenService, updateUserAccount } = require('../services/authService');
 const { validateEmail, validateGender, validatePassword, validatePhone } = require('../utils/validators');
 const { hashPassword, verifyPassword } = require('../utils/hashPassword');
 const { createJwtToken, verifyJwtToken } = require('../utils/jwtAuth');
+const { generateResetPasswordTemplate } = require('../templates/resetPassword');
+const { addEmailJob } = require('../jobs/email/queue');
 
 
 // create user controller
@@ -51,7 +53,7 @@ const createUserController = async (req, res, next) => {
         // create JWT token
         let token;
         try {
-            token = createJwtToken( user.toObject());
+            token = createJwtToken( user.toObject(), '1d'); // token valid for 1 day
         } catch (err) {
             return next(new AppError('Failed to create JWT token', 500));
         }
@@ -113,7 +115,7 @@ const loginUserController = async (req, res, next) => {
         // create JWT token
         let token;
         try {
-            token = createJwtToken(user.toObject());
+            token = createJwtToken(user.toObject(), '1d'); // token valid for 1 day
         }
         catch (err) {
             return next(new AppError('Failed to create JWT token', 500));
@@ -147,7 +149,200 @@ const loginUserController = async (req, res, next) => {
 };
 
 
+// logout user controller
+const logoutUserController = async (req, res, next) => {
+    try {
+        const token = req.cookies.token;
+
+        // clear the token cookie
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            sameSite: 'Strict' // Prevent CSRF attacks
+        });
+
+        // revoke the token in Redis cache
+        const isRevoked = await revokeTokenService(token);
+        if (!isRevoked) {
+            return next(new AppError('Failed to revoke token', 500));
+        }
+        return res.status(200).json({
+            status: "success",
+            message: "User logged out successfully"
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in logoutUserController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
+// forgot password controller
+const forgotPasswordController = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return next(new AppError('Email is required', 400));
+        }
+
+        // validate email
+        if (!validateEmail(email)) {
+            return next(new AppError('Invalid email address', 400));
+        }
+
+        // get user by email
+        const user = await getUserByEmail(email);
+        if (user) {
+            // create reset token
+            const resetToken = createJwtToken({ email: user.email, id: user._id }, '10m'); // token valid for 10 minutes
+            if (!resetToken) {
+                return next(new AppError('Failed to create reset token', 500));
+            }
+            // send reset email
+            const resetUrl = `${process.env.FRONTEND_URL}/api/auth/user/password/reset?token=${resetToken}`;
+            const emailData = {
+                to: user.email,
+                subject: 'Password Reset Request',
+                from: "noreply@thebigphotocontest.com",
+                text: 'You requested a password reset. Click the link below to reset your password:',
+                html: generateResetPasswordTemplate(resetUrl, user.firstname)
+            };
+            // add email job to queue
+            await addEmailJob(emailData);
+        }
+        // respond with success message
+        return res.status(200).json({
+            status: "success",
+            message: "If this email is registered, you will receive a password reset link shortly."
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in forgotPasswordController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
+// reset password controller
+const resetPasswordController = async (req, res, next) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return next(new AppError('Reset token is required', 400));
+        }
+
+        const { password, confirmPassword } = req.body;
+        if (!password || !validatePassword(password)) {
+            return next(new AppError('Invalid password', 400));
+        }
+        if (password !== confirmPassword) {
+            return next(new AppError('Passwords do not match', 400));
+        }
+
+        // verify reset token
+        let decoded;
+        try {
+            decoded = verifyJwtToken(token);
+        } catch (err) {
+            console.error('JWT verification error:', err);
+            return next(new AppError('Invalid reset token', 401));
+        }
+
+        // get user by email
+        const user = await getUserByEmail(decoded.email);
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        // hash new password
+        const hashedPassword = await hashPassword(password);
+
+        // update user password
+        const updatedUser = await updateUserAccount(user.email, { password: hashedPassword });
+        if (!updatedUser) {
+            return next(new AppError('Failed to update password', 500));
+        }
+
+        // revpoke the reset token
+        const isRevoked = await revokeTokenService(token);
+        if (!isRevoked) {
+            return next(new AppError('Failed to revoke reset token', 500));
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Password reset successfully. You can now log in with your new password."
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in resetPasswordController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
+// update user account controller
+const updateUserAccountController = async (res, req, next) => {
+    try {
+        const user = req.user; // user is attached to request object by auth middleware
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        const updateData = req.body;
+        // validate input
+        if (updateData.email && !validateEmail(updateData.email)) {
+            return next(new AppError('Invalid email address', 400));
+        }
+        if (updateData.phone && !validatePhone(updateData.phone)) {
+            return next(new AppError('Invalid phone number', 400));
+        }
+        if (updateData.gender && !validateGender(updateData.gender)) {
+            return next(new AppError("Gender must either be male or female", 400));
+        }
+        if (updateData.password && !validatePassword(updateData.password)) {
+            return next(new AppError('Password must be 8 characters long, contain a lower case, upper case,a number and a special characters', 400));
+        }
+        // verify old password, if password is being updated
+        if (updateData.password && updateData.oldPassword) {
+            const isPasswordValid = await verifyPassword(updateData.oldPassword, user.password);
+            if (!isPasswordValid) {
+                return next(new AppError('Invalid old password', 401));
+            }
+        }
+
+        // update user account
+        const updatedUser = await updateUserAccount(user.email, updateData);
+        if (!updatedUser) {
+            return next(new AppError('Failed to update user account', 500));
+        }
+        // delete password from response
+        updatedUser.password = undefined;
+
+        return res.status(200). json({
+            status: "success",
+            message: "User account updated successfully",
+            user: updatedUser.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in updateUserAccountController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
 // export functions
 module.exports = {
-    createUserController, loginUserController
+    createUserController, loginUserController, logoutUserController, forgotPasswordController,
+    resetPasswordController, updateUserAccountController,
 };
