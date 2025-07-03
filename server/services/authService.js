@@ -34,10 +34,10 @@ const createUserService = async (userData) => {
 
 
 // get user by email
-const getUserByEmail = async (email) => {
+const getUserByEmail = async (email, throwError = true) => {
     try {
         const user = await User.findOne({ email });
-        if (!user) {
+        if (!user && throwError) {
             throw new AppError('User not found', 404);
         }
         return user;
@@ -109,7 +109,28 @@ const updateUserAccount = async (email, updateData) => {
 };
 
 
+// Delete User Account Service
+const deleteUserAccountService = async (email) => {
+    try {
+        // delete user by email
+        const result = await User.deleteOne({ email });
+        if (result.deletedCount === 0) {
+            return { deleted: false }; // No user found to delete
+        } else {
+            return { deleted: true };
+        }
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting user account:', error);
+        throw new AppError('Error deleting user account', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
     createUserService, getUserByEmail, revokeTokenService, updateUserAccount,
+    deleteUserAccountService,
 };

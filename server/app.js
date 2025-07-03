@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const { errorMiddleware } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 dotenv.config();
 // Connect to the database
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/category', categoryRoutes);
 
 // error middleware
 app.use(errorMiddleware);

@@ -1,5 +1,7 @@
 const { AppError } = require('../utils/error');
-const { createUserService, getUserByEmail, revokeTokenService, updateUserAccount } = require('../services/authService');
+const { createUserService, getUserByEmail, revokeTokenService, updateUserAccount,
+    deleteUserAccountService
+ } = require('../services/authService');
 const { validateEmail, validateGender, validatePassword, validatePhone } = require('../utils/validators');
 const { hashPassword, verifyPassword } = require('../utils/hashPassword');
 const { createJwtToken, verifyJwtToken } = require('../utils/jwtAuth');
@@ -39,7 +41,7 @@ const createUserController = async (req, res, next) => {
 
         // create user
         const user = await createUserService({
-            email,
+            email: email.toLowerCase(), // store email in lowercase
             password: hashedPassword,
             firstname,
             lastname,
@@ -75,7 +77,8 @@ const createUserController = async (req, res, next) => {
                 firstName: user.firstname,
                 lastName: user.lastname,
                 phone: user.phone,
-                address: user.address || {}
+                address: user.address || {},
+                role: user.role || 'user' // default role is 'user'
             }
         });
     } catch (error) {
@@ -102,7 +105,7 @@ const loginUserController = async (req, res, next) => {
         }
 
         // get user by email
-        const user = await getUserByEmail(email);
+        const user = await getUserByEmail(email.toLowerCase());
         if (!user) {
             return next(new AppError('User not found', 404));
         }
@@ -136,7 +139,8 @@ const loginUserController = async (req, res, next) => {
                 firstName: user.firstname,
                 lastName: user.lastname,
                 phone: user.phone,
-                address: user.address || {}
+                address: user.address || {},
+                role: user.role || 'user' // default role is 'user'
             }
         });
     } catch (error) {
@@ -194,7 +198,7 @@ const forgotPasswordController = async (req, res, next) => {
         }
 
         // get user by email
-        const user = await getUserByEmail(email);
+        const user = await getUserByEmail(email.toLowerCase());
         if (user) {
             // create reset token
             const resetToken = createJwtToken({ email: user.email, id: user._id }, '10m'); // token valid for 10 minutes
@@ -289,7 +293,7 @@ const resetPasswordController = async (req, res, next) => {
 
 
 // update user account controller
-const updateUserAccountController = async (res, req, next) => {
+const updateUserAccountController = async (req, res, next) => {
     try {
         const user = req.user; // user is attached to request object by auth middleware
         if (!user) {
@@ -298,8 +302,11 @@ const updateUserAccountController = async (res, req, next) => {
 
         const updateData = req.body;
         // validate input
-        if (updateData.email && !validateEmail(updateData.email)) {
-            return next(new AppError('Invalid email address', 400));
+        if (updateData.role) {
+            return next(new AppError("Cannot update role, forbidden action", 403));
+        }
+        if (updateData.email) {
+            return next(new AppError('Cannot update email', 400));
         }
         if (updateData.phone && !validatePhone(updateData.phone)) {
             return next(new AppError('Invalid phone number', 400));
@@ -316,6 +323,11 @@ const updateUserAccountController = async (res, req, next) => {
             if (!isPasswordValid) {
                 return next(new AppError('Invalid old password', 401));
             }
+            const hashedPassword = await hashPassword(updateData.password);
+            if (!hashedPassword) {
+                return next(new AppError("An error occured while updating password, try again later", 500));
+            }
+            updateData.password = hashedPassword;
         }
 
         // update user account
@@ -341,8 +353,116 @@ const updateUserAccountController = async (res, req, next) => {
 };
 
 
+// delete user account controller
+const deleteUserAccountController = async (req, res, next) => {
+    try {
+        const user = req.user; // user is attached to request object by auth middleware
+        if (!user) {
+            return next(new AppError('User not found', 404));
+        }
+
+        // delete user account
+        const result = await deleteUserAccountService(user.email);
+        if (!result.deleted) {
+            return next(new AppError('Failed to delete user account', 500));
+        }
+
+        // revoke all tokens associated with the user
+        const token = req.cookies.token;
+        try {
+            const isRevoked = await revokeTokenService(token);
+            if (!isRevoked) {
+                console.error('Failed to revoke token');
+            }
+        } catch (err) {
+            console.error('Error revoking token:', err);
+        }
+
+        // clear the token cookie
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            sameSite: 'Strict' // Prevent CSRF attacks
+        });
+
+        return res.status(200).json({
+            status: "success",
+            message: "User account deleted successfully"
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in deleteUserAccountController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
+
+// create admin account
+const createAdminAccountController = async (req, res, next) => {
+    try {
+        const adminData = {
+           firstname: "Charles",
+           lastname: "Okechukwu",
+           email: process.env.ADMIN_EMAIL.toLowerCase(), // store email in lowercase
+           phone: process.env.ADMIN_PHONE,
+           role: "admin"
+        };
+
+        // validate admin email
+        if (!adminData.email || !validateEmail(adminData.email)) {
+            return next(new AppError('Invalid admin email address', 400));
+        }
+
+        // validate admin phone
+        if (!adminData.phone || !validatePhone(adminData.phone)) {
+            return next(new AppError('Invalid admin phone number', 400));
+        }
+
+        // check if admin already exists
+        const existingAdmin = await getUserByEmail(adminData.email, false); // do not throw error if user not found
+        if (existingAdmin) {
+            return next(new AppError('Admin account already exists', 400));
+        }
+
+        // hash default password
+        const password = process.env.ADMIN_PASSWORD || null;
+        if (!password || !validatePassword(password)) {
+            return next(new AppError('Invalid admin password', 400));
+        }
+
+        const hashedPassword = await hashPassword(password);
+        if (!hashedPassword) {
+            return next(new AppError('Failed to hash admin password', 500));
+        }
+        adminData.password = hashedPassword;
+
+        // create admin user
+        const adminUser = await createUserService(adminData);
+        if (!adminUser) {
+            return next(new AppError('Failed to create admin account', 500));
+        }
+
+        // delete password field
+        adminUser.password = undefined;
+
+        return res.status(201).json({
+            status: "success",
+            message: "Admin account created successfully",
+            user: adminUser.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+        console.error('Error in createAdminAccountController:', error);
+        return next(new AppError('Internal server error', 500));
+    }
+};
+
 // export functions
 module.exports = {
     createUserController, loginUserController, logoutUserController, forgotPasswordController,
-    resetPasswordController, updateUserAccountController,
+    resetPasswordController, updateUserAccountController, deleteUserAccountController, createAdminAccountController,
 };
