@@ -1,5 +1,5 @@
 const { AppError } = require('../utils/error');
-const { createCategoryService } = require('../services/categoryService');
+const { createCategoryService, getCategoryByIdService, getAllCategoriesService } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 
 
@@ -54,7 +54,32 @@ const createCategoryController = async (req, res, next) => {
 };
 
 
+// get all categories controller
+const getAllCategoriesController = async (req, res, next) => {
+    try {
+        // Get all categories using the service
+        const categories = await getAllCategoriesService();
+        if (!categories || categories.length === 0) {
+            return next(new AppError('No categories found', 404));
+        }
+
+        // Return response with the list of categories
+        res.status(200).json({
+            status: 'success',
+            message: 'Categories fetched successfully',
+            data: categories.map(category => category.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching categories:', error);
+        return next(new AppError('Failed to fetch categories', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // Export the controller
 module.exports = {
-    createCategoryController,
+    createCategoryController, getAllCategoriesController,
 };
