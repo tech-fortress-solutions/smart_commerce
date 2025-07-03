@@ -99,7 +99,36 @@ const updateCategoryService = async (id, categoryData) => {
 };
 
 
+// delet category service
+const deleteCategoryService = async (id) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+
+        // delete category by id
+        const deletedCategory = await Category.findByIdAndDelete(id);
+        if (!deletedCategory) {
+            throw new AppError("No Category Found with such ID", 404);
+        }
+
+        return { deleted: true };
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting category:', error);
+        throw new AppError('Failed to delete category', 500);
+    }
+};
+
+
 // export all services
 module.exports = {
     createCategoryService, getCategoryByIdService, getAllCategoriesService, updateCategoryService,
+    deleteCategoryService
 };
