@@ -1,5 +1,5 @@
 const { AppError } = require('../utils/error');
-const { createCategoryService, getCategoryByIdService, getAllCategoriesService } = require('../services/categoryService');
+const { createCategoryService, getCategoryByIdService, getAllCategoriesService, updateCategoryService } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 
 
@@ -79,7 +79,64 @@ const getAllCategoriesController = async (req, res, next) => {
 };
 
 
+// Update category controller
+const updateCategoryController = async (req, res, next) => {
+    try {
+        const user = req.user // Get the authenticated user from the request
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+
+        const categoryId = req.params.id; // Get category ID from request parameters
+        if (!categoryId) {
+            return next(new AppError('Category ID is required', 400));
+        }
+
+        // get updated category data from request body
+        const updatedCategoryData = req.body
+        
+        const data = {};
+        // check if category name is provided
+        if (updatedCategoryData.name) {
+            data.name = updatedCategoryData.name;
+        }
+        // check if category image is provided
+        if (req.file) {
+            // delete old image if exists
+            const oldCategory = await getCategoryByIdService(categoryId);
+            if (oldCategory && oldCategory.image) {
+                await deleteImageService(oldCategory.image);
+            }
+            // upload new image and get url
+            const imageUrl = await uploadImageService(req.file);
+            if (!imageUrl) {
+                return next(new AppError('Failed to upload category image', 500));
+            }
+            data.image = imageUrl; // Add new image URL to data
+        }
+        // update category using the service
+        const updatedCategory = await updateCategoryService(categoryId, data);
+        if (!updatedCategory) {
+            return next(new AppError('Failed to update category', 500));
+        }
+
+        // Return response with the updated category
+        res.status(200).json({
+            status: 'success',
+            message: 'Category updated successfully',
+            data: [updatedCategory.toObject()]
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error updating category:', error);
+        return next(new AppError('Failed to update category', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // Export the controller
 module.exports = {
-    createCategoryController, getAllCategoriesController,
+    createCategoryController, getAllCategoriesController, updateCategoryController,
 };
