@@ -71,7 +71,88 @@ const getAllCategoriesService = async () => {
 };
 
 
+// update category service
+const updateCategoryService = async (id, categoryData) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+
+        // update category by id
+        const updatedCategory = await Category.findByIdAndUpdate(id, categoryData, { new: true });
+        if (!updatedCategory) {
+            throw new AppError("No Category Found with such ID", 404);
+        }
+
+        return updatedCategory;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error updating category:', error);
+        throw new AppError('Failed to update category', 500);
+    }
+};
+
+
+// delet category service
+const deleteCategoryService = async (id) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+
+        // delete category by id
+        const deletedCategory = await Category.findByIdAndDelete(id);
+        if (!deletedCategory) {
+            throw new AppError("No Category Found with such ID", 404);
+        }
+
+        return { deleted: true };
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting category:', error);
+        throw new AppError('Failed to delete category', 500);
+    }
+};
+
+
+// get category by name
+const getCategoryByNameService = async (name) => {
+    try {
+        if (!name) {
+            throw new AppError("No name provided", 400);
+        }
+
+        // get category by name
+        const category = await Category.findOne({ name });
+        if (!category) {
+            throw new AppError("No Category Found with such Name", 404);
+        }
+
+        return category;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error fetching category by name:', error);
+        throw new AppError('Failed to fetch category', 500);
+    }
+};
+
+
 // export all services
 module.exports = {
-    createCategoryService, getCategoryByIdService, getAllCategoriesService,
+    createCategoryService, getCategoryByIdService, getAllCategoriesService, updateCategoryService,
+    deleteCategoryService, getCategoryByNameService
 };

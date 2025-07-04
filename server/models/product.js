@@ -1,0 +1,36 @@
+const mongoose = require('mongoose');
+
+
+// create product object model
+const productSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String, required: false },
+    price: { type: Number, required: true, min: 0 },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    quantity: { type: Number, required: true, min: 0 },
+    thumbnail: { type: String, required: true }, // Cover image URL
+    images: [{ type: String, required: true }],
+    rating: { type: Number, default: 0 },
+    numReviews : { type: Number, default: 0 },
+    currency: { type: String, default: 'NGN' }, // Default currency is NGN
+}, { timestamps: true });
+
+// check if product is in stock
+productSchema.virtual('inStock').get(function () {
+    return this.quantity > 0;
+});
+
+// Get the name of product category
+productSchema.virtual('categoryName').get(function () {
+    return this.category && typeof this.category === 'object' ? this.category.name : null;
+});
+
+// enable toJSON and toObject methods to include virtuals
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true  });
+
+// Create a model from the schema
+const Product = mongoose.model('Product', productSchema);
+
+// Export the model
+module.exports = Product;
