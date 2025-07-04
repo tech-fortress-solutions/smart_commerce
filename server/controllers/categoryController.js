@@ -18,6 +18,7 @@ const createCategoryController = async (req, res, next) => {
         if (!categoryData.name) {
             return next(new AppError('Category name is required', 400));
         }
+        categoryData.name = categoryData.name.trim().toLowerCase(); // Normalize category name
 
         // Add author to category data
         categoryData.author = user._id;
