@@ -183,7 +183,38 @@ const deleteCategoryController = async (req, res, next) => {
 };
 
 
+// get category by id
+const getCategoryController = async (req, res, next) => {
+    try {
+        const id = req.params.id; // Get category ID from request parameters
+        if (!id) {
+            return next(new AppError('Category ID is required', 400));
+        }
+
+        // Get category by ID using the service
+        const category = await getCategoryByIdService(id);
+        if (!category) {
+            return next(new AppError('No category found with the provided ID', 404));
+        }
+
+        // Return response with the category data
+        res.status(200).json({
+            status: 'success',
+            message: 'Category fetched successfully',
+            data: [category.toObject()]
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching category:', error);
+        return next(new AppError('Failed to fetch category', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // Export the controller
 module.exports = {
     createCategoryController, getAllCategoriesController, updateCategoryController, deleteCategoryController,
+    getCategoryController
 };
