@@ -103,7 +103,36 @@ const getAllProductsController = async (req, res, next) => {
 };
 
 
+// get products by category controller
+const getProductsByCategoryController = async (req, res, next) => {
+    try {
+        const categoryId = req.params.id;
+        if (!categoryId) {
+            return next(new AppError("No category ID provided", 400));
+        }
+
+        // get products by category using service
+        const products = await getProductsByCategoryService(categoryId);
+        if (!products || products.length === 0) {
+            return next(new AppError("No Products Found for this category", 404));
+        }
+        // Return response with the list of products
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            data: products.map(product => product.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching products by category ID:', error);
+        return next(new AppError('Failed to fetch products', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createProductController, getAllProductsController,
+    createProductController, getAllProductsController, getProductsByCategoryController,
 };
