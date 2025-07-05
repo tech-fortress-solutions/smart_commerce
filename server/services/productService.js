@@ -37,7 +37,81 @@ const createProductService = async (productData) => {
 };
 
 
+// get product by id service
+const getProductByIdService = async (id) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+
+        // get product by id
+        const product = await Product.findById(id).populate('category', 'name _id');
+        if (!product) {
+            throw new AppError("No Product Found", 404);
+        }
+        return product;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error fetching product by ID:', error);
+        throw new AppError('Failed to fetch product', 500);
+    }
+};
+
+
+// get pruducts by category service
+const getProductsByCategoryService = async (categoryId) => {
+    try {
+        if (!categoryId) {
+            throw new AppError("No category ID provided", 400);
+        }
+
+        // validate category
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            throw new AppError("Invalid id", 400);
+        }
+
+        // get products by categoryid
+        const products = await Product.find({ category: categoryId }).populate('category', 'name _id');
+        if (!products || products.length === 0) {
+            throw new AppError("No Products Found for this category", 404);
+        }
+        return products;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error fetching products by category ID:', error);
+        throw new AppError('Failed to fetch products', 500);
+    }
+};
+
+
+// get all products service
+const getAllProductsService = async () => {
+    try {
+        // get all products
+        const products = await Product.find({}).populate('category', 'name _id');
+        if (!products || products.length === 0) {
+            throw new AppError("No Products Found", 404);
+        }
+        return products;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error fetching all products:', error);
+        throw new AppError('Failed to fetch products', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
-    createProductService,
+    createProductService, getProductByIdService, getProductsByCategoryService, getAllProductsService,
 }
