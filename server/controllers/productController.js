@@ -1,5 +1,5 @@
 const { AppError } = require('../utils/error');
-const { createProductService } = require('../services/productService');
+const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService } = require('../services/productService');
 const { getCategoryByNameService } = require('../services/categoryService');
 const { uploadImageService } = require('../services/uploadService');
 
@@ -10,7 +10,7 @@ const createProductController = async (req, res, next) => {
         const productData = req.body;
         // validate fields and entry
         if (!productData.name || !productData.price || !productData.quantity || !productData.category) {
-            return next(AppError("Required field is missing", 400));
+            return next(new AppError("Required field is missing", 400));
         }
         productData.name = productData.name.trim().toLowerCase();
 
@@ -26,7 +26,7 @@ const createProductController = async (req, res, next) => {
         // get category id service
         const categoryObj = await getCategoryByNameService(productData.category);
         if (!categoryObj) {
-            return next(AppError('Category not found!', 404));
+            return next(new AppError('Category not found!', 404));
         }
         productData.category = categoryObj._id;
 
@@ -79,7 +79,31 @@ const createProductController = async (req, res, next) => {
 };
 
 
+// get all products controller
+const getAllProductsController = async (req, res, next) => {
+    try {
+        // get all products using the service
+        const products = await getAllProductsService();
+        if (!products || products.length === 0) {
+            return next(new AppError('No products found', 404));
+        }
+        // Return response with the list of products
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            data: products.map(product => product.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching products:', error);
+        return next(new AppError('Failed to fetch products', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createProductController,
+    createProductController, getAllProductsController,
 };
