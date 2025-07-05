@@ -132,7 +132,36 @@ const getProductsByCategoryController = async (req, res, next) => {
 };
 
 
+// get product by id controller
+const getProductByIdController = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            return next(new AppError("No product ID provided", 400));
+        }
+
+        // get product by id using service
+        const product = await getProductByIdService(productId);
+        if (!product) {
+            return next(new AppError("No Product Found", 404));
+        }
+        // Return response with the product details
+        res.status(200).json({
+            status: 'success',
+            message: 'Product fetched successfully',
+            data: product.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching product by ID:', error);
+        return next(new AppError('Failed to fetch product', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createProductController, getAllProductsController, getProductsByCategoryController,
+    createProductController, getAllProductsController, getProductsByCategoryController, getProductByIdController,
 };
