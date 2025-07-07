@@ -1,3 +1,4 @@
+const { sanitize } = require('../utils/helper');
 const { AppError } = require('../utils/error');
 const { createUserService, getUserByEmail, revokeTokenService, updateUserAccount,
     deleteUserAccountService
@@ -43,8 +44,8 @@ const createUserController = async (req, res, next) => {
         const user = await createUserService({
             email: email.toLowerCase(), // store email in lowercase
             password: hashedPassword,
-            firstname,
-            lastname,
+            firstname: sanitize(firstname), // sanitize input to prevent XSS
+            lastname: sanitize(lastname), // sanitize input to prevent XSS
             phone
         });
 
@@ -328,6 +329,28 @@ const updateUserAccountController = async (req, res, next) => {
                 return next(new AppError("An error occured while updating password, try again later", 500));
             }
             updateData.password = hashedPassword;
+        }
+        // sanitize input to prevent XSS
+        if (updateData.firstname) {
+            updateData.firstname = sanitize(updateData.firstname);
+        }
+        if (updateData.lastname) {
+            updateData.lastname = sanitize(updateData.lastname);
+        }
+        if (updateData.address) {
+            // sanitize address fields
+            if (updateData.address.street) {
+                updateData.address.street = sanitize(updateData.address.street);
+            }
+            if (updateData.address.city) {
+                updateData.address.city = sanitize(updateData.address.city);
+            }
+            if (updateData.address.state) {
+                updateData.address.state = sanitize(updateData.address.state);
+            }
+            if (updateData.address.zipCode) {
+                updateData.address.zipCode = sanitize(updateData.address.zipCode);
+            }
         }
 
         // update user account

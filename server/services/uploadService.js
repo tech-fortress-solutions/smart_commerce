@@ -70,13 +70,13 @@ const deleteImageService = async (imageUrl) => {
         const command = new DeleteObjectCommand(deleteParams);
         await s3Client.send(command);
 
-        return { deleted: true };
+        return true;
     } catch (error) {
         if (error instanceof AppError) {
             throw error; // Re-throw custom errors
         }
         console.error('Error deleting image:', error);
-        return { deleted: false };
+        throw new AppError('Failed to delete image', 500);
     }
 };
 

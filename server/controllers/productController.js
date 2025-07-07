@@ -1,7 +1,10 @@
+const { sanitize } = require('../utils/helper'); // Import sanitize-html for sanitizing inputs
 const { AppError } = require('../utils/error');
-const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService } = require('../services/productService');
+const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService,
+    updateProductService,
+ } = require('../services/productService');
 const { getCategoryByNameService } = require('../services/categoryService');
-const { uploadImageService } = require('../services/uploadService');
+const { uploadImageService, deleteImageService } = require('../services/uploadService');
 
 
 // create product controller
@@ -9,10 +12,14 @@ const createProductController = async (req, res, next) => {
     try {
         const productData = req.body;
         // validate fields and entry
-        if (!productData.name || !productData.price || !productData.quantity || !productData.category) {
+        if (!productData.name || !productData.price || !productData.quantity || !productData.category || !productData.description) {
             return next(new AppError("Required field is missing", 400));
         }
-        productData.name = productData.name.trim().toLowerCase();
+        productData.name = sanitize(productData.name);
+
+        if (productData.description) {
+            productData.description = sanitize(productData.description);
+        }
 
         // parse price and quantity to numbers
         productData.price = parseInt(productData.price, 10);
@@ -24,6 +31,9 @@ const createProductController = async (req, res, next) => {
         }
 
         // get category id service
+        if (productData.category) {
+            productData.category = sanitize(productData.category.trim());
+        }
         const categoryObj = await getCategoryByNameService(productData.category);
         if (!categoryObj) {
             return next(new AppError('Category not found!', 404));
@@ -46,13 +56,7 @@ const createProductController = async (req, res, next) => {
         // handle other images which are optional
         if (req.files && req.files.images) {
             const images = req.files.images;
-            const imageUrls = [];
-            if (images && images.length > 0) {
-                for (let i = 0; i < images.length; i++) {
-                    const imageUrl = await uploadImageService(images[i]);
-                    imageUrls.push(imageUrl);
-                }
-            }
+            const imageUrls = await Promise.all(images.map(image => uploadImageService(image)));
             if (imageUrls.length > 0) {
                 productData.images = imageUrls;
             }
@@ -161,7 +165,157 @@ const getProductByIdController = async (req, res, next) => {
 };
 
 
+// update product controller
+const updateProductController = async (req, res, next) => {
+    try {
+        // get product id
+        const productId = req.params.id;
+        if (!productId) {
+            return next(new AppError("No product ID provided", 400));
+        }
+        // get product by id using service
+        const product = await getProductByIdService(productId);
+        if (!product) {
+            return next(new AppError("No Product Found", 404));
+        }
+
+        // get and validate updated product data
+        const updateData = req.body;
+        if ((!updateData || Object.keys(updateData).length === 0) && (!req.files || Object.keys(req.files).length === 0)) {
+            return next(new AppError("No update data provided", 400));
+        }
+        if (updateData.name) {
+            updateData.name = sanitize(updateData.name);
+        }
+        // parse price and quantity to numbers
+        if (updateData.price) {
+            updateData.price = parseInt(updateData.price, 10);
+            if (isNaN(updateData.price)) {
+                return next(new AppError('Price must be a valid number', 400));
+            }
+        }
+        if (updateData.quantity) {
+            updateData.quantity = parseInt(updateData.quantity, 10);
+            if (isNaN(updateData.quantity)) {
+                return next(new AppError('Quantity must be a valid number', 400));
+            }
+        }
+        // get category id if provided
+        if (updateData.category) {
+            updateData.category = sanitize(updateData.category);
+            const categoryObj = await getCategoryByNameService(updateData.category);
+            if (!categoryObj) {
+                return next(new AppError('Category not found!', 404));
+            }
+            updateData.category = categoryObj._id;
+        }
+        // handle description update
+        if (updateData.description) {
+            updateData.description = sanitize(updateData.description);
+        }
+        // handle cover image update
+        if (req.files && req.files.cover) {
+            const coverImage = req.files.cover[0];
+            if (!coverImage) {
+                return next(new AppError('Cover image is missing', 400));
+            }
+            if (product.thumbnail) {
+                // delete old cover image if exists
+                await deleteImageService(product.thumbnail);
+            }
+            const coverImageUrl = await uploadImageService(coverImage);
+            if (!coverImageUrl) {
+                return next(new AppError('Failed to upload cover image', 500));
+            }
+            updateData.thumbnail = coverImageUrl;
+        }
+        // handle other images update
+        if (req.files && req.files.images) {
+            let indexes = [];
+            try {
+                indexes = JSON.parse(updateData.indexes) || [];
+                if (!indexes || !Array.isArray(indexes)) {
+                    return next(new AppError('Indexes for images are required', 400));
+                }
+            } catch (error) {
+                console.error('Error parsing indexes:', error);
+            }
+            const images = req.files.images;
+            const indexSet = new Set(indexes); // Use a Set for faster lookup
+            if (images && images.length > 0) {
+                for (let i = 0; i < images.length; i++) {
+                    const image = await uploadImageService(images[i]);
+                    if (!image) {
+                        return next(new AppError('Failed to upload image', 500));
+                    }
+                    // check if index is an index of an already uploaded image
+                    if (indexSet.has(i) && i < product.images.length && i >= 0) {
+                        // delete image and update image
+                        await deleteImageService(product.images[i]);
+                        product.images[i] = image;
+                    } else {
+                        product.images.push(image);
+                    }
+                }
+            }
+        }
+
+        // delete old images if requested
+        if (updateData.deleteImages) {
+            // sort delete indexes in descending order
+            if (typeof updateData.deleteImages === 'string') {
+                try {
+                    updateData.deleteImages = JSON.parse(updateData.deleteImages);
+                } catch (error) {
+                    return next(new AppError('Invalid delete images format', 400));
+                }
+            } else {
+                updateData.deleteImages = updateData.deleteImages;
+            }
+
+            const deleteIndexes = updateData.deleteImages.map(index => parseInt(index, 10));
+            if (!deleteIndexes || !Array.isArray(deleteIndexes)) {
+                return next(new AppError('Delete indexes for images are required', 400));
+            }
+            deleteIndexes.sort((a, b) => b - a);
+            for (const index of deleteIndexes) {
+                if (product.images[index]) {
+                    await deleteImageService(product.images[index]);
+                    product.images.splice(index, 1); // Remove the image from the array
+                }
+            }
+        }
+
+        // reset thumbnail if not provided
+        if (!updateData.thumbnail) {
+            updateData.thumbnail = product.thumbnail; // Keep the existing thumbnail if not updated
+        }
+        // update updated product data for images
+        updateData.images = product.images || [];
+        // update product using service
+        const updatedProduct = await updateProductService(productId, updateData);
+        if (!updatedProduct) {
+            return next(new AppError('Failed to update product', 500));
+        }
+
+        // Return response with the updated product
+        res.status(200).json({
+            status: 'success',
+            message: 'Product updated successfully',
+            data: updatedProduct.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error updating product:', error);
+        return next(new AppError('Failed to update product', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductController, getAllProductsController, getProductsByCategoryController, getProductByIdController,
+    updateProductController,
 };

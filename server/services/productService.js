@@ -111,7 +111,49 @@ const getAllProductsService = async () => {
 };
 
 
+// update product by id service
+const updateProductService = async (id, productData) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+
+        // validate product id and fetch product
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+        const product = await Product.findById(id);
+        if (!product) {
+            throw new AppError("No Product Found", 404);
+        }
+
+        // update product data
+        const allowedFields = ['name', 'description', 'price', 'category', 'images', 'thumbnail', 'quantity'];
+        Object.keys(productData).forEach(key => {
+            if (!allowedFields.includes(key)) {
+                // remove any fields not allowed to be updated
+                delete productData[key];
+            }
+        });
+
+        // return updated product
+        const updatedProduct = await Product.findByIdAndUpdate(id, productData, { new: true });
+        if (!updatedProduct) {
+            throw new AppError('Failed to update product', 500);
+        }
+        return updatedProduct;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error updating product by ID:', error);
+        throw new AppError('Failed to update product', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductService, getProductByIdService, getProductsByCategoryService, getAllProductsService,
+    updateProductService,
 }

@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
+const { querySanitizeMiddleware } = require('./middleware/querySanitizeMiddleware')
+const helmet = require('helmet');
 const connectDB = require('./config/db');
 const { errorMiddleware } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
@@ -15,9 +17,18 @@ connectDB();
 const app = express();
 
 app.use(cookieParser());
-app.use(cors());
+app.use(cors(
+    {
+        origin: process.env.CLIENT_URL,
+        credentials: true, // Allow cookies to be sent with requests
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }
+));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(querySanitizeMiddleware);
+app.use(helmet());
 
 // routes
 app.use('/api/auth', authRoutes);
