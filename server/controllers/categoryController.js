@@ -1,3 +1,4 @@
+const { sanitize } = require('../utils/helper'); // Import sanitize-html for sanitizing inputs
 const { AppError } = require('../utils/error');
 const { createCategoryService, getCategoryByIdService, getAllCategoriesService, updateCategoryService,
     deleteCategoryService
@@ -18,7 +19,7 @@ const createCategoryController = async (req, res, next) => {
         if (!categoryData.name) {
             return next(new AppError('Category name is required', 400));
         }
-        categoryData.name = categoryData.name.trim().toLowerCase(); // Normalize category name
+        categoryData.name = sanitize(categoryData.name); // Sanitize category name input
 
         // Add author to category data
         categoryData.author = user._id;
@@ -101,7 +102,7 @@ const updateCategoryController = async (req, res, next) => {
         const data = {};
         // check if category name is provided
         if (updatedCategoryData.name) {
-            data.name = updatedCategoryData.name;
+            data.name = sanitize(updatedCategoryData.name); // Sanitize category name input
         }
         // check if category image is provided
         if (req.file) {
