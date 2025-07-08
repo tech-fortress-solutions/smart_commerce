@@ -91,8 +91,62 @@ const retrieveOrderController = async (req, res, next) => {
 };
 
 
+// Create a new order controller
+const createOrderController = async (req, res, next) => {
+    try {
+        const { clientName, products, totalAmount, currency, clientId } = req.body;
+        // validate order data
+        if (!clientName || !products || !totalAmount || !currency) {
+            throw new AppError('Invalid order data', 400);
+        }
+        if (!Array.isArray(products) || products.length === 0) {
+            throw new AppError('Products must be a non-empty array', 400);
+        }
+
+        // get reference from request parameters
+        const { reference } = req.params;
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+        // create a new order data object and sanitize inputs
+        const orderData = {
+            clientName: sanitize(clientName),
+            products: products.map(p => ({
+                product: sanitize(p.product),
+                description: sanitize(p.description),
+                price: parseInt(sanitize(p.price), 10),
+                quantity: sanitize(p.quantity),
+                thumbnail: new URL(p.thumbnail).toString(), // Ensure thumbnail is a valid URL
+                currency: sanitize(p.currency || currency), // Use provided currency or default to 'NGN'
+            })),
+            totalAmount: parseInt(sanitize(totalAmount), 10), // Ensure totalAmount is an integer
+            reference: sanitize(reference),
+        };
+        // add clientId if provided
+        if (clientId) {
+            orderData.clientId = sanitize(clientId);
+        }
+        // create a new order in the database
+        const newOrder = await createOrderService(orderData);
+        if (!newOrder) {
+            throw new AppError('Failed to create order', 500);
+        }
+        res.status(201).json({
+            status: 'success',
+            message: 'Order created successfully',
+            data: newOrder.toObject(),
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error creating order:', error);
+        return next(new AppError('Failed to create order', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
-    stageOrderController,
-    retrieveOrderController,
+    stageOrderController, retrieveOrderController, createOrderController,
 };
