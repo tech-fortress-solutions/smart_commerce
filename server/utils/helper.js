@@ -20,7 +20,7 @@ const extractFileKey = (url) => {
 
 const sanitize = (input) => {
   if (typeof input !== 'string' && typeof input !== 'number' && typeof input !== 'boolean') {
-    throw new AppError('Input must be a string', 400);
+    throw new AppError('Input must be a string, number or boolean', 400);
   }
 
   const cleanInput = sanitizeHtml(String(input), {
@@ -31,8 +31,51 @@ const sanitize = (input) => {
 };
 
 
+// format currency to a standard format
+const formatAmount = (amount, currency = 'NGN') => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    throw new AppError('Amount must be a valid number', 400);
+  }
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+};
+
+
+// whatsapp message builder for orders with a link shortener
+const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, currency }) => {
+  // Validate input
+  if (!clientName || !products || !totalAmount || !reference || !currency) {
+    throw new AppError('Invalid order data for WhatsApp message', 400);
+  }
+
+  // format products for message maximum length of 10 products
+  const formattedProducts = products.slice(0, 10).map(p => `\n- ${p.product} (Qty: ${p.quantity}, Price: ${formatAmount(p.price, currency)})`).join('');
+  const remainingProductsCount = products.length - 10;
+  const additionalProductsMessage = remainingProductsCount > 0 ? `\n...and ${remainingProductsCount} more products` : '';
+
+  // format total amount
+  const formattedTotalAmount = formatAmount(totalAmount, currency);
+  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+  // Build the WhatsApp message
+  const message = `
+  New Pending Order:
+  Client Name: ${clientName}
+  Reference: ${reference}
+  Total Amount: ${formattedTotalAmount}
+  Products: ${formattedProducts}${additionalProductsMessage}
+  [For Vendor Use Only] Click the link to create the order: ${baseUrl}/api/admin/orders/${reference}`;
+
+  return encodeURIComponent(message);
+};
+
+
 // export the helper functions
 module.exports = {
   extractFileKey,
   sanitize,
+  buildWhatsAppMessage,
+  formatAmount
 };
