@@ -72,7 +72,49 @@ const createOrderService = async (orderData) => {
 };
 
 
+// get all orders order by date
+const getAllOrdersService = async () => {
+    try {
+        const orders = await Order.find().sort({ createdAt: -1 });
+        if (!orders || orders.length === 0) {
+            throw new AppError('No orders found', 404);
+        }
+        return orders;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error retrieving orders:', error);
+        throw new AppError('Failed to retrieve orders', 500);
+    }
+};
+
+
+// get order by reference
+const getOrderByReferenceService = async (reference) => {
+    try {
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+
+        const order = await Order.findOne({ reference });
+        if (!order) {
+            throw new AppError('Order not found', 404);
+        }
+        return order;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error retrieving order by reference:', error);
+        throw new AppError('Failed to retrieve order by reference', 500);
+    }
+};
+
+
+
 // export functions
 module.exports = {
-    createOrderService, stageOrderService, retrieveOrderService,
+    createOrderService, stageOrderService, retrieveOrderService, getAllOrdersService,
+    getOrderByReferenceService,
 };

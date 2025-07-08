@@ -1,5 +1,7 @@
 const { AppError } = require('../utils/error');
-const { stageOrderService, retrieveOrderService, createOrderService } = require('../services/orderService');
+const { stageOrderService, retrieveOrderService, createOrderService, getAllOrdersService,
+    getOrderByReferenceService,
+ } = require('../services/orderService');
 const { sanitize, buildWhatsAppMessage } = require('../utils/helper');
 
 
@@ -146,7 +148,29 @@ const createOrderController = async (req, res, next) => {
 };
 
 
+// get all orders controller
+const getAllOrdersController = async (req, res, next) => {
+    try {
+        const orders = await getAllOrdersService();
+        if (!orders || orders.length === 0) {
+            throw new AppError('No orders found', 404);
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'Orders retrieved successfully',
+            data: orders,
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error retrieving orders:', error);
+        return next(new AppError('Failed to retrieve orders', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
-    stageOrderController, retrieveOrderController, createOrderController,
+    stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
 };
