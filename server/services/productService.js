@@ -152,8 +152,34 @@ const updateProductService = async (id, productData) => {
 };
 
 
+// delete product service
+const deleteProductService = async (id) => {
+    try {
+        if (!id) {
+            throw new AppError("No id provided", 400);
+        }
+        // validate product id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new AppError("Invalid id", 400);
+        }
+        // delete product by id
+        const deletedProduct = await Product.findByIdAndDelete(id);
+        if (!deletedProduct) {
+            throw new AppError("No Product Found with such ID", 404);
+        }
+        return deletedProduct;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting product by ID:', error);
+        throw new AppError('Failed to delete product', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductService, getProductByIdService, getProductsByCategoryService, getAllProductsService,
-    updateProductService,
+    updateProductService, deleteProductService
 }

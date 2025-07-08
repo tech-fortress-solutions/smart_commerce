@@ -9,6 +9,7 @@ const { errorMiddleware } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 dotenv.config();
 // Connect to the database
@@ -34,6 +35,7 @@ app.use(helmet());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/category', categoryRoutes);
 app.use('/api/admin/product', productRoutes);
+app.use('/api/admin/orders', orderRoutes);
 
 // error middleware
 app.use(errorMiddleware);

@@ -1,7 +1,7 @@
 const { sanitize } = require('../utils/helper'); // Import sanitize-html for sanitizing inputs
 const { AppError } = require('../utils/error');
 const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService,
-    updateProductService,
+    updateProductService, deleteProductService
  } = require('../services/productService');
 const { getCategoryByNameService } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
@@ -314,8 +314,50 @@ const updateProductController = async (req, res, next) => {
 };
 
 
+// delete product controller
+const deleteProductController = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            return next(new AppError("No product ID provided", 400));
+        }
+        // get product by id using service
+        const product = await getProductByIdService(productId);
+        if (!product) {
+            return next(new AppError("No Product Found", 404));
+        }
+        // delete cover image if exists
+        if (product.thumbnail) {
+            await deleteImageService(product.thumbnail);
+        }
+        // delete other images if exists
+        if (product.images && product.images.length > 0) {
+            await Promise.all(product.images.map(image => deleteImageService(image)));
+        }
+        // delete product using service
+        const deletedProduct = await deleteProductService(productId);
+        if (!deletedProduct) {
+            return next(new AppError('Failed to delete product', 500));
+        }
+
+        // Return response indicating successful deletion
+        res.status(200).json({
+            status: 'success',
+            message: 'Product deleted successfully',
+            data: deletedProduct.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error deleting product:', error);
+        return next(new AppError('Failed to delete product', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductController, getAllProductsController, getProductsByCategoryController, getProductByIdController,
-    updateProductController,
+    updateProductController, deleteProductController
 };
