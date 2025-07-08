@@ -64,7 +64,35 @@ const stageOrderController = async (req, res, next) => {
 };
 
 
+// retrieve pending order controller
+const retrieveOrderController = async (req, res, next) => {
+    try {
+        const { reference } = req.params;
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+        // retrieve order from redis cache
+        const order = await retrieveOrderService(reference);
+        if (!order) {
+            throw new AppError('Order not found in cache', 404);
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'Order retrieved successfully',
+            data: order,
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error retrieving order:', error);
+        return next(new AppError('Failed to retrieve order', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController,
+    retrieveOrderController,
 };

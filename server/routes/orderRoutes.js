@@ -1,5 +1,5 @@
 const express = require('express');
-const { stageOrderController } = require('../controllers/orderController');
+const { stageOrderController, retrieveOrderController } = require('../controllers/orderController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -7,6 +7,7 @@ const router = express.Router();
 
 // Route to stage an order
 router.post('/stage', stageOrderController);
+router.get('/retrieve/:reference', authMiddleware, retrieveOrderController);
 
 
 // Export the router

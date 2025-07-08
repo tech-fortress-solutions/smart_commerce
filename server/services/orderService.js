@@ -34,12 +34,10 @@ const retrieveOrderService = async (reference) => {
             throw new AppError('No reference provided', 400);
         }
         // get order data from redis cache
-        const orderDataString = await getRedisCache(reference);
-        if (!orderDataString) {
+        const order = await getRedisCache(reference);
+        if (!order) {
             throw new AppError('Order not found in cache', 404);
         }
-        // parse order data from string to object
-        const order = JSON.parse(orderDataString);
         return order;
     } catch (error) {
         if (error instanceof AppError) {
