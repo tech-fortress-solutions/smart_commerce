@@ -170,7 +170,35 @@ const getAllOrdersController = async (req, res, next) => {
 };
 
 
+// get order by reference controller
+const getOrderByReferenceController = async (req, res, next) => {
+    try {
+        const { reference } = req.params;
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+        // get order from database
+        const order = await getOrderByReferenceService(reference);
+        if (!order) {
+            throw new AppError('Order not found', 404);
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'Order retrieved successfully',
+            data: order,
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error retrieving order by reference:', error);
+        return next(new AppError('Failed to retrieve order by reference', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
+    getOrderByReferenceController,
 };
