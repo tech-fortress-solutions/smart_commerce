@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Order = require('../models/order');
 const { AppError } = require('../utils/error');
-const { setRedisCache, getRedisCache } = require('../config/redis');
+const { setRedisCache, getRedisCache, deleteRedisCache } = require('../config/redis');
 
 
 // stage order in redis cache
@@ -61,6 +61,10 @@ const createOrderService = async (orderData) => {
         if (!newOrder) {
             throw new AppError('Failed to create order', 500);
         }
+
+        // delete the staged order from redis cache
+        await deleteRedisCache(newOrder.reference);
+
         return newOrder;
     } catch (error) {
         if (error instanceof AppError) {
@@ -112,9 +116,72 @@ const getOrderByReferenceService = async (reference) => {
 };
 
 
+// confirm order purchase service
+const confirmPurchaseService = async (reference) => {
+    try {
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+
+        //get order by reference
+        const order = await getOrderByReferenceService(reference);
+        if (!order) {
+            throw new AppError('Order not found', 404);
+        }
+        // check if order is already paid
+        if (order.status === 'paid') {
+            throw new AppError('Order already paid', 400);
+        }
+
+        // create a status object
+        const status = {
+            status: "paid",
+            paidAt: new Date(),
+        };
+        // update order in database
+        const updatedOrder = await Order.findOneAndUpdate({ reference }, status, { new: true });
+        if (!updatedOrder) {
+            throw new AppError('Order not found or already paid', 404);
+        }
+        // return updated order
+        return updatedOrder;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error confirming order purchase:', error);
+        throw new AppError('Failed to confirm order purchase', 500);
+    }
+};
+
+
+// update order service
+const updateOrderService = async (reference, updateData) => {
+    try {
+        if (!reference || !updateData) {
+            throw new AppError('Reference and update data are required', 400);
+        }
+
+        // find and update order by reference
+        const updatedOrder = await Order.findOneAndUpdate({ reference }, updateData, { new: true });
+        if (!updatedOrder) {
+            throw new AppError('Order not found or could not be updated', 404);
+        }
+
+        return updatedOrder;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error updating order:', error);
+        throw new AppError('Failed to update order', 500);
+    }
+};
+
+
 
 // export functions
 module.exports = {
     createOrderService, stageOrderService, retrieveOrderService, getAllOrdersService,
-    getOrderByReferenceService,
+    getOrderByReferenceService, confirmPurchaseService, updateOrderService,
 };

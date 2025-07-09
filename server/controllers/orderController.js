@@ -1,8 +1,11 @@
 const { AppError } = require('../utils/error');
 const { stageOrderService, retrieveOrderService, createOrderService, getAllOrdersService,
-    getOrderByReferenceService,
+    getOrderByReferenceService, confirmPurchaseService, updateOrderService
  } = require('../services/orderService');
+ const { updateProductService, getProductByIdService } = require('../services/productService');
 const { sanitize, buildWhatsAppMessage } = require('../utils/helper');
+const { generateReceiptFiles } = require('../utils/generateReciept');
+const { parse } = require('handlebars');
 
 
 // stage order controller
@@ -81,7 +84,7 @@ const retrieveOrderController = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: 'Order retrieved successfully',
-            data: order,
+            data: order, // Convert Mongoose document to plain object
         });
     } catch (error) {
         if (error instanceof AppError) {
@@ -185,7 +188,7 @@ const getOrderByReferenceController = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: 'Order retrieved successfully',
-            data: order,
+            data: order.toObject(),
         });
     } catch (error) {
         if (error instanceof AppError) {
@@ -197,8 +200,92 @@ const getOrderByReferenceController = async (req, res, next) => {
 };
 
 
+// confirm purchase and generate receipt controller
+const confirmPurchaseController = async (req, res, next) => {
+    try {
+        const reference = req.params.reference;
+        if (!reference) {
+            return next(new AppError("Reference is missing!", 400));
+        }
+
+        // retrieve order
+        const orderObj = await getOrderByReferenceService(reference);
+        if (!orderObj) {
+            return next(new AppError("Order not found!", 404));
+        }
+
+        // update product stock
+        for (const product of orderObj.products) {
+            if (!product.product || !product.quantity) {
+                return next(new AppError("Invalid product data in order", 400));
+            }
+            // get product from database
+            const productData = await getProductByIdService(product.product);
+            if (!productData) {
+                return next(new AppError(`Product with ID ${product.product} not found`, 404));
+            }
+            // check if product has enough stock
+            if (productData.quantity < product.quantity) {
+                return next(new AppError(`Insufficient stock for product ${productData.name}`, 400));
+            }
+            // update product stock
+            await updateProductService(product.product, {
+                quantity: parseInt(productData.quantity - product.quantity, 10),
+            });
+        }
+
+        // confirm purchase and generate receipt
+        const order = await confirmPurchaseService(reference);
+        if (!order) {
+            return next(new AppError("Order not found or already confirmed!", 404));
+        }
+
+        const brandInfo = {
+            name: process.env.BRAND_NAME || 'Smart Commerce',
+            logo: process.env.BRAND_LOGO_URL || 'https://example.com/logo.png',
+            address: process.env.BRAND_ADDRESS || '123 Main St, City, Country',
+            phone: process.env.ADMIN_PHONE || '+1234567890',
+            email: process.env.BRAND_EMAIL || 'realcharlieok@gmail.com',
+            whatsapp: process.env.ADMIN_PHONE || '+1234567890',
+        };
+        // generate receipt files
+        const recieptUrls = await generateReceiptFiles(order.toObject(), brandInfo);
+        if (!recieptUrls || !recieptUrls.pdfUrl || !recieptUrls.jpgUrl) {
+            return next(new AppError("Failed to generate receipt", 500));
+        }
+        // update order with receipt URLs
+        const updatedOrder = await updateOrderService(reference, {
+            receiptPdf: recieptUrls.pdfUrl,
+            receiptImage: recieptUrls.jpgUrl,
+        });
+        if (!updatedOrder) {
+            return next(new AppError("Failed to update order with receipt URLs", 500));
+        }
+
+        //return response with order and receipt URLs
+        res.status(200).json({
+            status: 'success',
+            message: 'Order confirmed and receipt generated successfully',
+            data: {
+                order,
+                receipt: {
+                    pdfUrl: recieptUrls.pdfUrl,
+                    jpgUrl: recieptUrls.jpgUrl,
+                },
+            },
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error confirming purchase:', error);
+        return next(new AppError('Failed to confirm purchase', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
-    getOrderByReferenceController,
+    getOrderByReferenceController, confirmPurchaseController,
 };
