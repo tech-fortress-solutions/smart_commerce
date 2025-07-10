@@ -1,11 +1,11 @@
 const { AppError } = require('../utils/error');
 const { stageOrderService, retrieveOrderService, createOrderService, getAllOrdersService,
-    getOrderByReferenceService, confirmPurchaseService, updateOrderService
+    getOrderByReferenceService, confirmPurchaseService, updateOrderService, deleteOrderService,
  } = require('../services/orderService');
  const { updateProductService, getProductByIdService } = require('../services/productService');
 const { sanitize, buildWhatsAppMessage } = require('../utils/helper');
 const { generateReceiptFiles } = require('../utils/generateReciept');
-const { parse } = require('handlebars');
+const { deleteImageService } = require('../services/uploadService');
 
 
 // stage order controller
@@ -284,8 +284,56 @@ const confirmPurchaseController = async (req, res, next) => {
 };
 
 
+// Delete order controller
+const deleteOrderController = async (req, res, next) => {
+    try {
+        const { reference } = req.params;
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+
+        // confirm user's permission to delete order
+        const user = req.user; // Assuming user is set in request by authentication middleware
+        if (!user) {
+            throw new AppError('User not authenticated', 401);
+        }
+        if (user.role !== 'admin') {
+            throw new AppError('You do not have permission to delete orders', 403);
+        }
+        // retrieve order from database
+        const order = await getOrderByReferenceService(reference);
+        if (!order) {
+            throw new AppError('Order not found', 404);
+        }
+        // delete reciept files if they exist
+        if (order.receiptPdf) {
+            await deleteImageService(order.receiptPdf);
+        }
+        if (order.receiptImage) {
+            await deleteImageService(order.receiptImage);
+        }
+        // delete order from database
+        const deletedOrder = await deleteOrderService(reference);
+        if (!deletedOrder) {
+            throw new AppError('Failed to delete order', 500);
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'Order deleted successfully',
+            data: deletedOrder.toObject(), // Convert Mongoose document to plain object
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error deleting order:', error);
+        return next(new AppError('Failed to delete order', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
-    getOrderByReferenceController, confirmPurchaseController,
+    getOrderByReferenceController, confirmPurchaseController, deleteOrderController,
 };

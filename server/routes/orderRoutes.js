@@ -1,6 +1,6 @@
 const express = require('express');
 const { stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
-    getOrderByReferenceController, confirmPurchaseController,
+    getOrderByReferenceController, confirmPurchaseController, deleteOrderController,
  } = require('../controllers/orderController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
@@ -14,6 +14,7 @@ router.put('/confirm/:reference', authMiddleware, confirmPurchaseController);
 router.get('/retrieve/:reference', authMiddleware, retrieveOrderController);
 router.post('/:reference', authMiddleware, createOrderController);
 router.get('/:reference', authMiddleware, getOrderByReferenceController);
+router.delete('/:reference', authMiddleware, deleteOrderController);
 
 
 

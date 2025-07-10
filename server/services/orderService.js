@@ -179,9 +179,33 @@ const updateOrderService = async (reference, updateData) => {
 };
 
 
+// Delete order service
+const deleteOrderService = async (reference) => {
+    try {
+        if (!reference) {
+            throw new AppError('No reference provided', 400);
+        }
+
+        // find and delete order by reference
+        const deletedOrder = await Order.findOneAndDelete({ reference });
+        if (!deletedOrder) {
+            throw new AppError('Order not found or could not be deleted', 404);
+        }
+
+        return deletedOrder;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting order:', error);
+        throw new AppError('Failed to delete order', 500);
+    }
+};
+
+
 
 // export functions
 module.exports = {
     createOrderService, stageOrderService, retrieveOrderService, getAllOrdersService,
-    getOrderByReferenceService, confirmPurchaseService, updateOrderService,
+    getOrderByReferenceService, confirmPurchaseService, updateOrderService, deleteOrderService,
 };
