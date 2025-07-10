@@ -127,6 +127,14 @@ const createOrderController = async (req, res, next) => {
             totalAmount: parseInt(sanitize(totalAmount), 10), // Ensure totalAmount is an integer
             reference: sanitize(reference),
         };
+
+        // validate total amount matches with products and quantity
+        const calculatedTotal = orderData.products.reduce((sum, product) => {
+            return sum + (product.price * product.quantity);
+        }, 0);
+        if (calculatedTotal !== orderData.totalAmount) {
+            orderData.totalAmount = calculatedTotal; // Update totalAmount if it doesn't match
+        }
         // add clientId if provided
         if (clientId) {
             orderData.clientId = sanitize(clientId);
@@ -332,8 +340,79 @@ const deleteOrderController = async (req, res, next) => {
 };
 
 
+// update order controller
+const updateOrderController = async (req, res, next) => {
+    try {
+        const { reference } = req.params;
+        if (!reference) {
+            return next(new AppError('No reference provided', 400));
+        }
+
+        // retreive order from database
+        const order = await getOrderByReferenceService(reference);
+        if (!order) {
+            return next(new AppError('Order not found', 404));
+        }
+
+        // check if product status allows editing
+        if (order.status === 'paid') {
+            return next(new AppError('Cannot edit a paid order', 400));
+        }
+
+        // get updated order data from request body
+        const { clientName, products, currency, clientId } = req.body;
+        // create order data and validate
+        const updateData = {};
+        if (clientName) {
+            updateData.clientName = sanitize(clientName);
+        }
+        if (clientId) {
+            updateData.clientId = sanitize(clientId);
+        }
+        if (products) {
+            if (!Array.isArray(products) || products.length === 0) {
+                return next(new AppError('Products must be a non-empty array', 400));
+            }
+            // calculate total amount from products
+            const calculatedTotal = products.reduce((sum, product) => {
+                return sum + (parseInt(sanitize(product.price), 10) * parseInt(sanitize(product.quantity), 10));
+            }, 0);
+            updateData.products = products.map(p => ({
+                product: sanitize(p.product),
+                description: sanitize(p.description),
+                price: parseInt(sanitize(p.price), 10),
+                quantity: parseInt(sanitize(p.quantity), 10),
+                thumbnail: new URL(p.thumbnail).toString(), // Ensure thumbnail is a valid URL
+                currency: sanitize(p.currency || currency), // Use provided currency or default to 'NGN'
+            }));
+            updateData.totalAmount = calculatedTotal; // Update totalAmount if it doesn't match
+        }
+        if (currency) {
+            updateData.currency = sanitize(currency);
+        }
+
+        // update order in database
+        const updatedOrder = await updateOrderService(reference, updateData);
+        if (!updatedOrder) {
+            return next(new AppError('Failed to update order', 500));
+        }
+        res.status(200).json({
+            status: 'success',
+            message: 'Order updated successfully',
+            data: updatedOrder.toObject(), // Convert Mongoose document to plain object
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error updating order:', error);
+        return next(new AppError('Failed to update order', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
-    getOrderByReferenceController, confirmPurchaseController, deleteOrderController,
+    getOrderByReferenceController, confirmPurchaseController, deleteOrderController, updateOrderController,
 };
