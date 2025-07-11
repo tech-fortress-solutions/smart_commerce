@@ -17,6 +17,8 @@ const orderSchema = new mongoose.Schema({
     status: { type: String, enum: ['pending', 'paid'], default: 'pending' }, // Order status, default is 'pending'
     paidAt: { type: Date, required: false }, // Date when the order was paid
     currency: { type: String, default: 'NGN' }, // Default currency is NGN
+    receiptPdf: { type: String, required: false }, // URL to the receipt PDF
+    receiptImage: { type: String, required: false }, // URL to the receipt image
 }, { timestamps: true });
 
 // Create a model from the schema

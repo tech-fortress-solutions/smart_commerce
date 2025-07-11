@@ -81,7 +81,47 @@ const deleteImageService = async (imageUrl) => {
 };
 
 
+// upload pdf file service
+const uploadPdfService = async (file) => {
+    try {
+        if (!file) {
+            throw new AppError('Please upload a PDF file', 400);
+        }
+
+        if (file.mimetype !== 'application/pdf') {
+            throw new AppError('Invalid file type. Only PDF files are allowed.', 400);
+        }
+
+        const fileKey = `uploads/${Date.now()}-${file.originalname}`;
+        
+        // upload parameters
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET,
+            Key: fileKey,
+            Body: file.buffer,
+            ContentType: 'application/pdf',
+            ACL: 'public-read',
+        };
+
+        // Upload the PDF to S3
+        const command = new PutObjectCommand(uploadParams);
+        await s3Client.send(command);
+
+        // Return the minio URL of the uploaded PDF
+        const pdfUrl = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${fileKey}`;
+        return pdfUrl;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom errors
+        }
+        console.error('Error uploading PDF:', error);
+        throw new AppError('Failed to upload PDF', 500);
+    }
+};
+
+
 module.exports = {
     uploadImageService,
-    deleteImageService
+    deleteImageService,
+    uploadPdfService
 };

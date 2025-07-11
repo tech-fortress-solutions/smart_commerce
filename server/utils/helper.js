@@ -51,7 +51,7 @@ const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, cu
   }
 
   // format products for message maximum length of 10 products
-  const formattedProducts = products.slice(0, 10).map(p => `\n- ${p.product} (Qty: ${p.quantity}, Price: ${formatAmount(p.price, currency)})`).join('');
+  const formattedProducts = products.slice(0, 10).map(p => `\n- ${p.description} (Qty: ${p.quantity}, Price: ${formatAmount(p.price, currency)})`).join('');
   const remainingProductsCount = products.length - 10;
   const additionalProductsMessage = remainingProductsCount > 0 ? `\n...and ${remainingProductsCount} more products` : '';
 
