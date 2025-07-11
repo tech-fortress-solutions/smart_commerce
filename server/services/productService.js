@@ -128,13 +128,26 @@ const updateProductService = async (id, productData) => {
         }
 
         // update product data
-        const allowedFields = ['name', 'description', 'price', 'category', 'images', 'thumbnail', 'quantity'];
-        Object.keys(productData).forEach(key => {
-            if (!allowedFields.includes(key)) {
-                // remove any fields not allowed to be updated
-                delete productData[key];
+        if ('$inc' in productData) {
+            const allowedFields = ['totalRating', 'numReviews'];
+            for (const field in productData.$inc) {
+                if (!allowedFields.includes(field)) {
+                    delete productData.$inc[field]; // Remove disallowed fields
+                }
             }
-        });
+
+            if (Object.keys(productData.$inc).length === 0) {
+                throw new AppError('No valid fields to update', 400);
+            }
+        } else {
+            const allowedFields = ['name', 'description', 'price', 'category', 'images', 'thumbnail', 'quantity', 'rating', 'numReviews'];
+            Object.keys(productData).forEach(key => {
+                if (!allowedFields.includes(key)) {
+                    // remove any fields not allowed to be updated
+                    delete productData[key];
+                }
+            });
+        }
 
         // return updated product
         const updatedProduct = await Product.findByIdAndUpdate(id, productData, { new: true });

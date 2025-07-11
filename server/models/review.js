@@ -7,6 +7,7 @@ const reviewSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     rating: { type: Number, required: true, min: 1, max: 5 }, // Rating between 1 and 5
     comment: { type: String, required: false, trim: true },
+    reference: { type: String, required: true, trim: true }, // Unique reference for the review
     response: {
         comment: { type: String, required: false, trim: true },
         responder: { type: String, required: false, trim: true },
@@ -21,6 +22,9 @@ reviewSchema.set('toObject', { virtuals: true });
 
 // create unique index for product and user combination
 reviewSchema.index({ product: 1, user: 1 }, { unique: true });
+
+// create unique index for each user, product and reference combination
+reviewSchema.index({ user: 1, product: 1, reference: 1 }, { unique: true });
 
 // Virtual to get the reviewer's first and last name
 reviewSchema.virtual('reviewerName').get(function () {

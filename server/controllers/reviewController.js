@@ -68,18 +68,13 @@ const createReviewController = async (req, res, next) => {
             return next(new AppError('Failed to create review', 500));
         }
 
-        // calculate product review and get number of reviews
-        const reviews = await getReviewsByProductService(productData._id);
-        if (!reviews || reviews.length === 0) {
-            return next(new AppError('No reviews found for this product', 404));
-        }
-        const totalRating = reviews.reduce((total, review) => total + review.rating, 0);
-        const averageRating = (totalRating / reviews.length).toFixed(1);
 
         // Update product with new average rating and number of reviews
         const updatedProduct = await updateProductService(productData._id, {
-            rating: averageRating,
-            numberOfReviews: reviews.length
+            $inc: {
+                totalRating: newReview.rating, // Increment total rating by new review rating
+                numReviews: 1 // Increment number of reviews
+            }
         });
         if (!updatedProduct) {
             return next(new AppError('Failed to update product rating', 500));
