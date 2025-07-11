@@ -100,7 +100,36 @@ const createReviewController = async (req, res, next) => {
 };
 
 
+// get reviews by product controller
+const getProductReviewsController = async (req, res, next) => {
+    try {
+        const { productId } = req.params;
+        if (!productId) {
+            return next(new AppError('No product ID provided', 400));
+        }
+
+        // Get reviews by product ID using service
+        const reviews = await getReviewsByProductService(productId);
+        if (!reviews || reviews.length === 0) {
+            return next(new AppError('No reviews found for this product', 404));
+        }
+        // Return response with the list of reviews
+        res.status(200).json({
+            status: 'success', 
+            message: 'Reviews fetched successfully',
+            data: reviews.map(review => review.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching product reviews:', error);
+        return next(new AppError('Failed to fetch product reviews', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createReviewController,
+    createReviewController, getProductReviewsController,
 }
