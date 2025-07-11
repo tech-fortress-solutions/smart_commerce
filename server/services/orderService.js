@@ -203,9 +203,38 @@ const deleteOrderService = async (reference) => {
 };
 
 
+// Get user's orders service
+const getUserOrdersService = async (userId) => {
+    try {
+        if (!userId) {
+            throw new AppError('No user ID provided', 400);
+        }
+
+        // validate user ID
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new AppError('Invalid user ID', 400);
+        }
+
+        // find orders by user ID
+        const orders = await Order.find({ clientId: userId }).sort({ createdAt: -1 });
+        if (!orders || orders.length === 0) {
+            throw new AppError('No orders found for this user', 404);
+        }
+        return orders;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error retrieving user orders:', error);
+        throw new AppError('Failed to retrieve user orders', 500);
+    }
+};
+
+
 
 // export functions
 module.exports = {
     createOrderService, stageOrderService, retrieveOrderService, getAllOrdersService,
     getOrderByReferenceService, confirmPurchaseService, updateOrderService, deleteOrderService,
+    getUserOrdersService,
 };

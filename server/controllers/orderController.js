@@ -1,6 +1,7 @@
 const { AppError } = require('../utils/error');
 const { stageOrderService, retrieveOrderService, createOrderService, getAllOrdersService,
     getOrderByReferenceService, confirmPurchaseService, updateOrderService, deleteOrderService,
+    getUserOrdersService
  } = require('../services/orderService');
  const { updateProductService, getProductByIdService } = require('../services/productService');
 const { sanitize, buildWhatsAppMessage } = require('../utils/helper');
@@ -11,9 +12,9 @@ const { deleteImageService } = require('../services/uploadService');
 // stage order controller
 const stageOrderController = async (req, res, next) => {
     try {
-        const { clientName, products, totalAmount, currency, clientId  } = req.body;
+        const { clientName, products, currency, clientId  } = req.body;
         // validate order data
-        if (!clientName || !products || !totalAmount || !currency) {
+        if (!clientName || !products || !currency) {
             throw new AppError('Invalid order data', 400);
         }
         if (!Array.isArray(products) || products.length === 0) {
@@ -34,9 +35,14 @@ const stageOrderController = async (req, res, next) => {
                 currency: sanitize(p.currency || currency), // Use provided currency or default to 'NGN'
 
             })),
-            totalAmount: parseInt(sanitize(totalAmount), 10), // Ensure totalAmount is an integer
             reference
         };
+
+        // claculate total amount from products
+        const totalAmount = orderData.products.reduce((sum, product) => {
+            return sum + (product.price * product.quantity);
+        }, 0);
+        orderData.totalAmount = totalAmount; // Add totalAmount to orderData
         if (clientId) {
             orderData.clientId = sanitize(clientId); // Add clientId if provided
         }
@@ -411,8 +417,38 @@ const updateOrderController = async (req, res, next) => {
 };
 
 
+// get user orders controller
+const getUserOrdersController = async (req, res, next) => {
+    try {
+        const user = req.user; // Get the authenticated user from the request
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+
+        // get user orders from database
+        const orders = await getUserOrdersService(user._id);
+        if (!orders || orders.length === 0) {
+            return next(new AppError('No orders found for this user', 404));
+        }
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'User orders retrieved successfully',
+            data: orders.map(order => order.toObject()), // Convert Mongoose documents to plain objects
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error retrieving user orders:', error);
+        return next(new AppError('Failed to retrieve user orders', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
     getOrderByReferenceController, confirmPurchaseController, deleteOrderController, updateOrderController,
+    getUserOrdersController
 };
