@@ -11,12 +11,12 @@ const createReviewService = async (reviewData) => {
         }
 
         // Create a new review instance
-        const newReview = await Review.create(reviewData).populate('user', 'firstname lastname');
+        const newReview = await Review.create(reviewData);
         if (!newReview) {
             throw new AppError('Failed to create review', 500);
         }
 
-        return newReview;
+        return newReview.populate('user', 'firstname lastname');
     } catch (error) {
         if (error instanceof AppError) {
             throw error; // Re-throw custom AppError
@@ -140,8 +140,34 @@ const getReviewByIdService = async (reviewId) => {
 };
 
 
+// Delete review service
+const deleteReviewService = async (reviewId) => {
+    try {
+        if (!reviewId) {
+            throw new AppError('No review ID provided', 400);
+        }
+        // Validate review ID
+        if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+            throw new AppError('Invalid review ID', 400);
+        }
+        // Delete the review
+        const deletedReview = await Review.findByIdAndDelete(reviewId);
+        if (!deletedReview) {
+            throw new AppError('Review not found', 404);
+        }
+        return deletedReview;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting review:', error);
+        throw new AppError('Failed to delete review', 500);
+    }
+};
+
+
 // Export functions
 module.exports = {
     createReviewService, getReviewsByProductService, validateReviewService, updateReviewService,
-    getReviewByIdService,
+    getReviewByIdService, deleteReviewService,
 }

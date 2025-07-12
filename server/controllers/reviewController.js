@@ -1,5 +1,5 @@
 const { createReviewService, getReviewsByProductService, validateReviewService, getReviewByIdService,
-    updateReviewService,
+    updateReviewService, deleteReviewService,
  } = require('../services/reviewService');
 const { getProductByIdService, updateProductService } = require('../services/productService');
 const { getOrderByReferenceService, updateOrderService } = require('../services/orderService');
@@ -62,7 +62,8 @@ const createReviewController = async (req, res, next) => {
             product: productData._id,
             user: user._id,
             rating: parseInt(sanitize(rating)),
-            comment: sanitize(comment)
+            comment: sanitize(comment),
+            reference: reference,
         };
         // Create review using service
         const newReview = await createReviewService(reviewData);
@@ -198,7 +199,60 @@ const updateReviewController = async (req, res, next) => {
 };
 
 
+// Delete Review Controller
+const deleteReviewController = async (req, res, next) => {
+    try {
+        const {reviewId} = req.params;
+        if (!reviewId) {
+            return next(new AppError('No review ID provided', 400));
+        }
+
+        const user = req.user;
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+        if (user.role !== 'admin') {
+            return next(new AppError('Only admins can delete reviews', 403));
+        }
+
+        // Get review by ID using service
+        const review = await getReviewByIdService(reviewId);
+        if (!review) {
+            return next(new AppError('Review not found', 404));
+        }
+
+        // Delete review using service
+        const deletedReview = await deleteReviewService(reviewId);
+        if (!deletedReview) {
+            return next(new AppError('Failed to delete review', 500));
+        }
+        // Update product rating and number of reviews
+        const updatedProduct = await updateProductService(review.product, {
+            $inc: {
+                totalRating: -review.rating, // Decrease total rating by deleted review rating
+                numReviews: -1 // Decrease number of reviews by 1
+            }
+        });
+        if (!updatedProduct) {
+            return next(new AppError('Failed to update product rating', 500));
+        }
+        // Return response with success message
+        res.status(200).json({
+            status: 'success',
+            message: 'Review deleted successfully',
+            data: deletedReview.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error deleting review:', error);
+        return next(new AppError('Failed to delete review', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createReviewController, getProductReviewsController, updateReviewController,
+    createReviewController, getProductReviewsController, updateReviewController, deleteReviewController,
 }
