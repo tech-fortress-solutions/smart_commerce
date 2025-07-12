@@ -11,7 +11,7 @@ const createReviewService = async (reviewData) => {
         }
 
         // Create a new review instance
-        const newReview = await Review.create(reviewData);
+        const newReview = await Review.create(reviewData).populate('user', 'firstname lastname');
         if (!newReview) {
             throw new AppError('Failed to create review', 500);
         }
@@ -80,7 +80,68 @@ const validateReviewService = async (userId, productId) => {
 };
 
 
+// update review service
+const updateReviewService = async (reviewId, updateData) => {
+    try {
+        if (!reviewId) {
+            throw new AppError("Review id is required", 400);
+        }
+
+        if (!updateData || Object.keys(updateData).length === 0) {
+            throw new AppError("No update data provided", 400);
+        }
+
+        // Validate review ID
+        if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+            throw new AppError('Invalid review ID', 400);
+        }
+        // Update the review
+        const updatedReview = await Review.findByIdAndUpdate(reviewId, updateData, { new: true }).populate('user', 'firstname lastname');
+        if (!updatedReview) {
+            throw new AppError('Failed to update review', 404);
+        }
+        return updatedReview;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error updating review:', error);
+        throw new AppError('Failed to update review', 500);
+    }
+};
+
+
+// Get Review by id service
+const getReviewByIdService = async (reviewId) => {
+    try {
+        if (!reviewId) {
+            throw new AppError('No review ID provided', 400);
+        }
+
+        // Validate review ID
+        if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+            throw new AppError('Invalid review ID', 400);
+        }
+
+        // Get review by ID
+        const review = await Review.findById(reviewId).populate('user', 'firstname lastname');
+        if (!review) {
+            throw new AppError('Review not found', 404);
+        }
+
+        return review;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error getting review by ID:', error);
+        throw new AppError('Failed to get review by ID', 500);
+    }
+};
+
+
 // Export functions
 module.exports = {
-    createReviewService, getReviewsByProductService, validateReviewService,
+    createReviewService, getReviewsByProductService, validateReviewService, updateReviewService,
+    getReviewByIdService,
 }

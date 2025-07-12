@@ -21,10 +21,7 @@ reviewSchema.set('toJSON', { virtuals: true });
 reviewSchema.set('toObject', { virtuals: true });
 
 // create unique index for product and user combination
-reviewSchema.index({ product: 1, user: 1 }, { unique: true });
-
-// create unique index for each user, product and reference combination
-reviewSchema.index({ user: 1, product: 1, reference: 1 }, { unique: true });
+reviewSchema.index({ product: 1, user: 1, reference: 1 }, { unique: true });
 
 // Virtual to get the reviewer's first and last name
 reviewSchema.virtual('reviewerName').get(function () {

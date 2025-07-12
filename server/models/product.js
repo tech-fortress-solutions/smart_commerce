@@ -27,7 +27,7 @@ productSchema.virtual('categoryName').get(function () {
 
 // Calculate the average rating of the product
 productSchema.virtual('rating').get(function () {
-    if (this.rating && this.numReviews > 0) {
+    if (this.numReviews > 0) {
         return (this.totalRating / this.numReviews).toFixed(1); // Return average rating
     }
     return 0; // Return 0 if no reviews
