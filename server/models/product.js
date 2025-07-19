@@ -9,11 +9,21 @@ const productSchema = new mongoose.Schema({
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     quantity: { type: Number, required: true, min: 0 },
     thumbnail: { type: String, required: true }, // Cover image URL
-    images: [{ type: String, required: true }],
+    images: { type: [String], default: [] }, // Array of image URLs
     totalRating: { type: Number, default: 0 },
     numReviews : { type: Number, default: 0 },
     currency: { type: String, default: 'NGN' }, // Default currency is NGN
+    promotion: { type: String, enum: ['new stock', 'discount promo', 'buyOneGetOne', 'none'], default: 'none' },
+    promoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion', required: false },
+    promoTitle: { type: String },
+    inPromotion: { type: Boolean, default: false }, // Whether the product is currently in a promotion
 }, { timestamps: true });
+
+// Add indexes for better performance
+productSchema.index({ name: 'text' });
+productSchema.index({ category: 1 });
+productSchema.index({ promotion: 1 });
+productSchema.index({ promoId: 1 });
 
 // check if product is in stock
 productSchema.virtual('inStock').get(function () {
@@ -27,7 +37,7 @@ productSchema.virtual('categoryName').get(function () {
 
 // Calculate the average rating of the product
 productSchema.virtual('rating').get(function () {
-    if (this.rating && this.numReviews > 0) {
+    if (this.numReviews > 0) {
         return (this.totalRating / this.numReviews).toFixed(1); // Return average rating
     }
     return 0; // Return 0 if no reviews

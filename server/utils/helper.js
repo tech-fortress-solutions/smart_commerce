@@ -1,6 +1,7 @@
 // Description: Helper functions for various utilities
 const sanitizeHtml = require('sanitize-html');
 const { AppError } = require('./error');
+const puppeteer = require('puppeteer');
 
 
 const extractFileKey = (url) => {
@@ -72,10 +73,37 @@ const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, cu
 };
 
 
+// Convert HTML to image file
+const htmlToImage = async (promoTitle, html) => {
+  try {
+    if (!html || typeof html !== 'string') {
+      throw new AppError('Invalid HTML content', 400);
+    }
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const screenshotBuffer = await page.screenshot({ fullPage: true });
+    await browser.close();
+    const imageFile = {
+      contentType: 'image/png',
+      buffer: screenshotBuffer,
+      originalname: `${promoTitle}.png`,
+      mimetype: 'image/png',
+    }
+    return imageFile;
+  } catch (error) {
+    console.error('Error converting HTML to image:', error);
+    throw new AppError('Failed to convert HTML to image', 500);
+  }
+};
+
+
 // export the helper functions
 module.exports = {
   extractFileKey,
   sanitize,
   buildWhatsAppMessage,
-  formatAmount
+  formatAmount,
+  htmlToImage,
 };

@@ -1,4 +1,6 @@
-const { createReviewService, getReviewsByProductService, validateReviewService } = require('../services/reviewService');
+const { createReviewService, getReviewsByProductService, validateReviewService, getReviewByIdService,
+    updateReviewService, deleteReviewService,
+ } = require('../services/reviewService');
 const { getProductByIdService, updateProductService } = require('../services/productService');
 const { getOrderByReferenceService, updateOrderService } = require('../services/orderService');
 const { AppError } = require('../utils/error');
@@ -60,7 +62,8 @@ const createReviewController = async (req, res, next) => {
             product: productData._id,
             user: user._id,
             rating: parseInt(sanitize(rating)),
-            comment: sanitize(comment)
+            comment: sanitize(comment),
+            reference: reference,
         };
         // Create review using service
         const newReview = await createReviewService(reviewData);
@@ -124,7 +127,132 @@ const getProductReviewsController = async (req, res, next) => {
 };
 
 
+// Update Review Controller
+const updateReviewController = async (req, res, next) => {
+    try {
+        const { reviewId } = req.params;
+        const { rating, comment, response } = req.body;
+        if (!reviewId) {
+            return next(new AppError('No review ID provided', 400));
+        }
+        if (!rating && !comment && !response) {
+            return next(new AppError('No fields to update provided', 400));
+        }
+
+        // Get review by ID using service
+        const review = await getReviewByIdService(reviewId);
+        if (!review) {
+            return next(new AppError('Review not found', 404));
+        }
+
+        // create update data object
+        const updateData = {};
+        if (rating) {
+            updateData.rating = parseInt(sanitize(rating));
+        }
+        if (comment) {
+            updateData.comment = sanitize(comment);
+        }
+        if (response) {
+            // Check if user is admin or has permission to respond
+            if (!req.user || req.user.role !== 'admin') {
+                return next(new AppError('Only admins can respond to reviews', 403));
+            }
+            updateData.response = {
+                comment: sanitize(response.comment),
+                responder: process.env.BRAND_NAME || 'Smart Commerce',
+                responderId: req.user._id,
+                createdAt: new Date()
+            }
+        }
+
+        // Update review using service
+        const updatedReview = await updateReviewService(reviewId, updateData);
+        if (!updatedReview) {
+            return next(new AppError('Failed to update review', 500));
+        }
+        // Update product rating if rating was updated
+        if (rating) {
+            const updatedProduct = await updateProductService(review.product, {
+                $inc: {
+                    totalRating: updatedReview.rating - review.rating, // Adjust total rating based on new rating
+                    numReviews: 0 // Number of reviews remains the same
+                }
+            });
+            if (!updatedProduct) {
+                return next(new AppError('Failed to update product rating', 500));
+            }
+        }
+        // Return response with updated review
+        res.status(200).json({
+            status: 'success',
+            message: 'Review updated successfully',
+            data: updatedReview.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error updating review:', error);
+        return next(new AppError('Failed to update review', 500)); // Handle other errors gracefully
+    }
+};
+
+
+// Delete Review Controller
+const deleteReviewController = async (req, res, next) => {
+    try {
+        const {reviewId} = req.params;
+        if (!reviewId) {
+            return next(new AppError('No review ID provided', 400));
+        }
+
+        const user = req.user;
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+        if (user.role !== 'admin') {
+            return next(new AppError('Only admins can delete reviews', 403));
+        }
+
+        // Get review by ID using service
+        const review = await getReviewByIdService(reviewId);
+        if (!review) {
+            return next(new AppError('Review not found', 404));
+        }
+
+        // Delete review using service
+        const deletedReview = await deleteReviewService(reviewId);
+        if (!deletedReview) {
+            return next(new AppError('Failed to delete review', 500));
+        }
+        // Update product rating and number of reviews
+        const updatedProduct = await updateProductService(review.product, {
+            $inc: {
+                totalRating: -review.rating, // Decrease total rating by deleted review rating
+                numReviews: -1 // Decrease number of reviews by 1
+            }
+        });
+        if (!updatedProduct) {
+            return next(new AppError('Failed to update product rating', 500));
+        }
+        // Return response with success message
+        res.status(200).json({
+            status: 'success',
+            message: 'Review deleted successfully',
+            data: deletedReview.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error deleting review:', error);
+        return next(new AppError('Failed to delete review', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
-    createReviewController, getProductReviewsController,
+    createReviewController, getProductReviewsController, updateReviewController, deleteReviewController,
 }
