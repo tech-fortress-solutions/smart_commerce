@@ -26,7 +26,55 @@ const createPromotionService = async (promotionData) => {
 };
 
 
+// Get latest active promotion service
+const getActivePromotionService = async () => {
+    try {
+        // Get the latest active promotion
+        const activePromotion = await Promotion.findOne({ active: true }).sort({ createdAt: -1 })
+            .populate('products.product', 'thumbnail name currency description category images totalRating numReviews');
+        
+        if (!activePromotion) {
+            throw new AppError('No active promotion found', 404);
+        }
+
+        return activePromotion;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error getting active promotion:', error);
+        throw new AppError('Failed to get active promotion', 500);
+    }
+};
+
+// Get promotion by ID service
+const getPromotionByIdService = async (promotionId) => {
+    try {
+        if (!promotionId) {
+            throw new AppError('No promotion ID provided', 400);
+        }
+        // Validate promotion ID
+        if (!mongoose.Types.ObjectId.isValid(promotionId)) {
+            throw new AppError('Invalid promotion ID', 400);
+        }
+        // Get promotion by ID
+        const promotion = await Promotion.findById(promotionId)
+            .populate('products.product', 'thumbnail name currency description category images totalRating numReviews');
+        if (!promotion) {
+            throw new AppError('Promotion not found', 404);
+        }
+        return promotion;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error getting promotion by ID:', error);
+        throw new AppError('Failed to get promotion by ID', 500);
+    }
+};
+
+
 // Export promotion service functions
 module.exports = {
-    createPromotionService,
+    createPromotionService, getActivePromotionService, getPromotionByIdService,
 }

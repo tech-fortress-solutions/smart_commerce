@@ -1,4 +1,4 @@
-const { createPromotionService } = require('../services/promotionService');
+const { createPromotionService, getActivePromotionService, getPromotionByIdService } = require('../services/promotionService');
 const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
@@ -71,7 +71,57 @@ const createPromotionController = async (req, res, next) => {
 };
 
 
+// Get active promotion controller
+const getActivePromotionController = async (req, res, next) => {
+   try {
+      // Get active promotion using service
+      const activePromotion = await getActivePromotionService();
+      if (!activePromotion) {
+         return next(new AppError('No active promotion found', 404));
+      }
+      // Return response with active promotion
+      return res.status(200).json({
+         status: 'success',
+         message: 'Active promotion retrieved successfully',
+         data: {
+            promotion: activePromotion.toObject()
+         }
+      });
+   } catch (error) {
+      console.error('Error getting active promotion:', error);
+      return next(new AppError('Internal server error', 500));
+   }
+};
+
+
+// Get Promotion by id controller
+const getPromotionByIdController = async (req, res, next) => {
+   try {
+      const promoId = req.params.id;
+      if (!promoId) {
+         return next(new AppError('Promotion ID is required', 400));
+      }
+      // Get promotion by ID using service
+      const promotion = await getPromotionByIdService(promoId);
+      if (!promotion) {
+         return next(new AppError('Promotion not found', 404));
+      }
+      // Return response with promotion details
+      return res.status(200).json({
+         status: 'success',
+         message: 'Promotion retrieved successfully',
+         data: {
+            promotion: promotion.toObject()
+         }
+      });
+   } catch (error) {
+      console.error('Error getting promotion by ID:', error);
+      return next(new AppError('Internal server error', 500));
+   }
+};
+
+
 // Export the controller
 module.exports = {
-    createPromotionController,
+    createPromotionController, getActivePromotionController, getPromotionByIdController,
 };
