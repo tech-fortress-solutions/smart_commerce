@@ -40,6 +40,17 @@ const createProductController = async (req, res, next) => {
         }
         productData.category = categoryObj._id;
 
+        // Confirm if product is in promotion
+        if (productData.promotion && productData.promotion !== 'none') {
+            productData.inPromotion = true;
+            if (productData.promoId) {
+                productData.promoId = sanitize(productData.promoId);
+            }
+            if (productData.promoTitle) {
+                productData.promoTitle = sanitize(productData.promoTitle);
+            }
+        }
+
         // get and upload cover and other images
         if (req.files && req.files.cover) {
             const coverImage = req.files.cover[0];
@@ -212,6 +223,17 @@ const updateProductController = async (req, res, next) => {
         // handle description update
         if (updateData.description) {
             updateData.description = sanitize(updateData.description);
+        }
+        // handle promotion update
+        if (updateData.promotion && updateData.promotion !== 'none') {
+            updateData.inPromotion = true;
+        }
+        // handle promoId and promoTitle update
+        if (updateData.promoId) {
+            updateData.promoId = sanitize(updateData.promoId);
+        }
+        if (updateData.promoTitle) {
+            updateData.promoTitle = sanitize(updateData.promoTitle);
         }
         // handle cover image update
         if (req.files && req.files.cover) {

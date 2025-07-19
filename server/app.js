@@ -11,6 +11,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
 
 dotenv.config();
 // Connect to the database
@@ -38,6 +39,7 @@ app.use('/api/admin/category', categoryRoutes);
 app.use('/api/admin/product', productRoutes);
 app.use('/api/admin/orders', orderRoutes);
 app.use('/api/review', reviewRoutes);
+app.use('/api/admin/promotion', promotionRoutes);
 
 // error middleware
 app.use(errorMiddleware);
