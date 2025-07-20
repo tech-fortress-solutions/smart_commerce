@@ -17,6 +17,7 @@ const productSchema = new mongoose.Schema({
     promoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Promotion', required: false },
     promoTitle: { type: String },
     inPromotion: { type: Boolean, default: false }, // Whether the product is currently in a promotion
+    deleteAt: { type: Date, default: null }, // Soft delete field
 }, { timestamps: true });
 
 // Add indexes for better performance
@@ -24,6 +25,14 @@ productSchema.index({ name: 'text' });
 productSchema.index({ category: 1 });
 productSchema.index({ promotion: 1 });
 productSchema.index({ promoId: 1 });
+
+// Populate product category
+function populateCategory(next) {
+    this.populate('category', 'name');
+    next();
+}
+productSchema.pre('find', populateCategory);
+productSchema.pre('findOne', populateCategory);
 
 // check if product is in stock
 productSchema.virtual('inStock').get(function () {

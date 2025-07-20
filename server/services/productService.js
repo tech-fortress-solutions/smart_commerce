@@ -191,8 +191,43 @@ const deleteProductService = async (id) => {
 };
 
 
+// Procuct search service
+const searchProductsService = async (filter, sort) => {
+    try {
+        // validate filter and sort
+        if (!filter && typeof filter !== 'object') {
+            throw new AppError('Invalid filter format', 400);
+        }
+        if (sort && typeof sort !== 'object') {
+            throw new AppError('Invalid sort format', 400);
+        }
+
+        // search products
+        if (!sort) {
+            const products = await Product.find(filter).populate('category', 'name _id');
+            if (!products || products.length === 0) {
+                throw new AppError('No products found matching the criteria', 404);
+            }
+            return products;
+        } else {
+            const products = await Product.find(filter).sort(sort).populate('category', 'name _id');
+            if (!products || products.length === 0) {
+                throw new AppError('No products found matching the criteria', 404);
+            }
+            return products;
+        }
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error searching products:', error);
+        throw new AppError('Failed to search products', 500);
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductService, getProductByIdService, getProductsByCategoryService, getAllProductsService,
-    updateProductService, deleteProductService
+    updateProductService, deleteProductService, searchProductsService,
 }

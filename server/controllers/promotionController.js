@@ -1,6 +1,7 @@
 const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
       deletePromotionService,
  } = require('../services/promotionService');
+ const { updateProductService, getProductByIdService, deleteProductService } = require('../services/productService');
 const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
@@ -22,6 +23,14 @@ const createPromotionController = async (req, res, next) => {
          if (!validTypes.includes(type)) {
             return next(new AppError(`Invalid promotion type. Valid types are: ${validTypes.join(', ')}`, 400));
          };
+
+         // validate dates
+         if (isNaN(new Date(startDate)) || isNaN(new Date(endDate))) {
+            return next(new AppError('Invalid date format', 400));
+         }
+         if (new Date(startDate) >= new Date(endDate)) {
+            return next(new AppError('Start date must be before end date', 400));
+         }
 
          // create promotion data object
          const promotionData = {
@@ -56,6 +65,31 @@ const createPromotionController = async (req, res, next) => {
          const newPromotion = await createPromotionService(promotionData);
          if (!newPromotion) {
             return next(new AppError('Failed to create promotion', 500));
+         }
+
+         // update products in promotion
+         for (const product of newPromotion.products) {
+            const productData = await getProductByIdService(product.product);
+            if (!productData) {
+               return next(new AppError(`Product with ID ${product.product} not found`, 404));
+            }
+            // update product promotion details if product is not already in a promotion
+            if (!productData.inPromotion) {
+               if (productData.quantity < product.quantity) {
+                  return next(new AppError(`Insufficient stock for product ${productData.name}, increase product stock quantity or reduce quantity for promotion`, 400));
+               }
+               const updatedProduct = await updateProductService(productData._id, {
+                  quantity: productData.quantity - product.quantity,
+                  inPromotion: true,
+                  promotion: newPromotion.type,
+                  promoId: newPromotion._id,
+                  promoTitle: newPromotion.title,
+                  deleteAt: (newPromotion.type !== 'new stock') ? newPromotion.endDate : null
+               });
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} for promotion`, 500));
+               };
+            }
          }
 
          // return response with new promotion
@@ -229,6 +263,42 @@ const deletePromotionController = async (req, res, next) => {
       if (!deletedPromotion) {
          return next(new AppError('Failed to delete promotion', 500));
       }
+
+      // Update or delete products in promotion
+      for (const product of deletedPromotion.products) {
+         const productData = await getProductByIdService(product.product);
+         if (!productData) {
+            continue; // Skip if product not found
+         }
+         // if product is in promotion and deleteAt is set, delete else update product
+         if (productData.inPromotion && productData.promoId.toString() === promoId) {
+            if (productData.deleteAt) {
+               // delete product thumbnail and images if exists
+               if (productData.thumbnail) {
+                  await deleteImageService(productData.thumbnail);
+               }
+               for (const image of productData.images) {
+                  await deleteImageService(image);
+               }
+               // delete product
+               await deleteProductService(productData._id);
+            } else {
+               // update product to remove promotion details
+               const updatedProduct = await updateProductService(productData._id, {
+                  inPromotion: false,
+                  promotion: 'none',
+                  promoId: null,
+                  promoTitle: null,
+                  deleteAt: null,
+                  quantity: productData.quantity + product.quantity // Restore quantity
+               });
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} after promotion deletion`, 500));
+               }
+            }
+         }
+      }
+
       // Return response with success message
       return res.status(200).json({
          status: 'success',
