@@ -83,7 +83,28 @@ const htmlToImage = async (promoTitle, html) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
-    const screenshotBuffer = await page.screenshot({ fullPage: true });
+
+    await new Promise(resolve => setTimeout(resolve, 500)); // wait for 3 seconds to ensure the page is fully rendered
+    
+    const element = await page.$('body > *'); // select the body and all its children
+    if (!element) {
+      throw new AppError('Failed to find the element to screenshot', 500);
+    }
+
+    const box = await element.boundingBox();
+    if (!box) {
+      throw new AppError('Failed to get bounding box of the element', 500);
+    }
+
+    const screenshotBuffer = await page.screenshot({
+      clip: {
+        x: box.x,
+        y: box.y,
+        width: box.width,
+        height: box.height,
+      },
+      omitBackground: true,
+    });
     await browser.close();
     const imageFile = {
       contentType: 'image/png',

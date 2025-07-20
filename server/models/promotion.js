@@ -34,15 +34,6 @@ const promotionSchema = new mongoose.Schema({
 promotionSchema.set('toJSON', { virtuals: true });
 promotionSchema.set('toObject', { virtuals: true });
 
-// create a populate function to get the product details in promotions
-function populateProducts(next) {
-    this.populate('products.product', 'thumbnail name currency description category images totalRating numReviews');
-}
-
-promotionSchema.pre('find', populateProducts);
-promotionSchema.pre('findOne', populateProducts);
-promotionSchema.pre('findById', populateProducts);
-
 // Create a model from the schema
 const Promotion = mongoose.model('Promotion', promotionSchema);
 // Export the model

@@ -1,7 +1,7 @@
 const { sanitize } = require('../utils/helper'); // Import sanitize-html for sanitizing inputs
 const { AppError } = require('../utils/error');
 const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService,
-    updateProductService, deleteProductService
+    updateProductService, deleteProductService, searchProductsService
  } = require('../services/productService');
 const { getCategoryByNameService } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
@@ -378,8 +378,62 @@ const deleteProductController = async (req, res, next) => {
 };
 
 
+// search products controller
+const searchProductsController = async (req, res, next) => {
+    try {
+        const { query, category, minPrice, maxPrice, sortBy, sortOrder } = req.query;
+        // Validate query parameters
+        if (!query || typeof query !== 'string') {
+            return next(new AppError('Invalid search query', 400));
+        }
+        // Prepare filter object
+        const filter = {};
+        filter.$or = [
+            { name: { $regex: query, $options: 'i' } },
+            { description: { $regex: query, $options: 'i' } }
+        ];
+        // Add category filter if provided
+        if (category) {
+            const categoryObj = await getCategoryByNameService(category);
+            if (categoryObj) {
+                filter.category = categoryObj._id;
+            }
+        }
+        // Add price range filter if provided
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = parseInt(minPrice, 10);
+            if (maxPrice) filter.price.$lte = parseInt(maxPrice, 10);
+        }
+        // Prepare sort object
+        const sort = {};
+        if (sortBy) {
+            sort[sortBy] = sortOrder === 'desc' ? -1 : 1; // Default to ascending order if not specified
+        }
+
+        // Search products using service
+        const products = await searchProductsService(filter, sort);
+        if (!products || products.length === 0) {
+            return next(new AppError('No products found matching the criteria', 404));
+        }
+        // Return response with the list of products
+        res.status(200).json({
+            status: 'success',
+            message: 'Products fetched successfully',
+            data: products.map(product => product.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error searching products:', error);
+        return next(new AppError('Failed to search products', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
     createProductController, getAllProductsController, getProductsByCategoryController, getProductByIdController,
-    updateProductController, deleteProductController
+    updateProductController, deleteProductController, searchProductsController
 };
