@@ -1,4 +1,6 @@
-const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService } = require('../services/promotionService');
+const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
+      deletePromotionService,
+ } = require('../services/promotionService');
 const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
@@ -204,7 +206,46 @@ const updatePromotionController = async (req, res, next) => {
 };
 
 
+// Delete Promotion Controller
+const deletePromotionController = async (req, res, next) => {
+   try {
+      const promoId = req.params.id;
+      if (!promoId) {
+         return next(new AppError('Promotion ID is required', 400));
+      }
+
+      // Get promotion by ID using service
+      const promotion = await getPromotionByIdService(promoId);
+      if (!promotion) {
+         return next(new AppError('Promotion not found', 404));
+      }
+
+      // Delete promotion coverImage if exists
+      if (promotion.coverImage) {
+         await deleteImageService(promotion.coverImage);
+      }
+      // Delete promotion using service
+      const deletedPromotion = await deletePromotionService(promoId);
+      if (!deletedPromotion) {
+         return next(new AppError('Failed to delete promotion', 500));
+      }
+      // Return response with success message
+      return res.status(200).json({
+         status: 'success',
+         message: 'Promotion deleted successfully',
+         data: {
+            promotion: deletedPromotion.toObject()
+         }
+      });
+   } catch (error) {
+      console.error('Error deleting promotion:', error);
+      return next(new AppError('Internal server error', 500));
+   }
+};
+
+
 // Export the controller
 module.exports = {
     createPromotionController, getActivePromotionController, getPromotionByIdController, updatePromotionController,
+    deletePromotionController,
 };

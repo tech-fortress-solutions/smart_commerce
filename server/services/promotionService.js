@@ -101,7 +101,34 @@ const updatePromotionService = async (promotionId, updateData) => {
 };
 
 
+// Delete promotion service
+const deletePromotionService = async (promotionId) => {
+    try {
+        if (!promotionId) {
+            throw new AppError('Promotion ID is required', 400);
+        }
+        // Validate promotion ID
+        if (!mongoose.Types.ObjectId.isValid(promotionId)) {
+            throw new AppError('Invalid promotion ID', 400);
+        }
+        // Delete the promotion
+        const deletedPromotion = await Promotion.findByIdAndDelete(promotionId);
+        if (!deletedPromotion) {
+            throw new AppError('Failed to delete promotion', 404);
+        }
+        return deletedPromotion;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error deleting promotion:', error);
+        throw new AppError('Failed to delete promotion', 500);
+    }
+};
+
+
 // Export promotion service functions
 module.exports = {
     createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
+    deletePromotionService,
 }
