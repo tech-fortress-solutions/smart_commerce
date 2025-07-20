@@ -127,8 +127,29 @@ const deletePromotionService = async (promotionId) => {
 };
 
 
+// Get expired promotions service
+const getExpiredPromotionsService = async () => {
+    try {
+        // Get all the recent expired promotion
+        const expiredPromotions = await Promotion.find({ endDate: { $lt: new Date() } })
+            .populate('products.product', 'thumbnail name currency description category images totalRating numReviews')
+            .sort({ endDate: -1 });
+        if (!expiredPromotions || expiredPromotions.length === 0) {
+            throw new AppError('No expired promotions found', 404);
+        }
+        return expiredPromotions;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error getting expired promotions:', error);
+        throw new AppError('Failed to get expired promotions', 500);
+    }
+};
+
+
 // Export promotion service functions
 module.exports = {
     createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
-    deletePromotionService,
+    deletePromotionService, getExpiredPromotionsService
 }
