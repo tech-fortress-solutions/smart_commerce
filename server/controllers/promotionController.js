@@ -1,4 +1,4 @@
-const { createPromotionService, getActivePromotionService, getPromotionByIdService } = require('../services/promotionService');
+const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService } = require('../services/promotionService');
 const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
@@ -121,7 +121,90 @@ const getPromotionByIdController = async (req, res, next) => {
 };
 
 
+// Update Promotion Controller
+const updatePromotionController = async (req, res, next) => {
+   try {
+      const promoId = req.params.id;
+      if (!promoId) {
+         return next(new AppError('Promotion ID is required', 400));
+      }
+      const { title, description, type, startDate, endDate, products, discountPercentage, template } = req.body;
+      // Get promotion by ID using service
+      const promotion = await getPromotionByIdService(promoId);
+      if (!promotion) {
+         return next(new AppError('Promotion not found', 404));
+      }
+
+      // create update data object
+      const updateData = {};
+      if (title) updateData.title = sanitize(title);
+      if (description) updateData.description = sanitize(description);
+      if (type) {
+         const validTypes = ['new stock', 'discount promo', 'buyOneGetOne', 'none'];
+         if (!validTypes.includes(type)) {
+            return next(new AppError(`Invalid promotion type. Valid types are: ${validTypes.join(', ')}`, 400));
+         }
+         updateData.type = type;
+      }
+      if (startDate) updateData.startDate = new Date(startDate);
+      if (endDate) updateData.endDate = new Date(endDate);
+      if (discountPercentage) {
+         const discount = parseInt(discountPercentage, 10);
+         if (isNaN(discount) || discount < 0 || discount > 100) {
+            return next(new AppError('Invalid discount percentage', 400));
+         }
+         updateData.discountPercentage = discount;
+      }
+      if (products && Array.isArray(products)) {
+         updateData.products = products.map(product => ({
+            product: sanitize(product.product),
+            quantity: parseInt(product.quantity, 10),
+            mainPrice: parseInt(product.mainPrice, 10),
+            promoPrice: parseInt(product.promoPrice, 10)
+         }));
+      }
+      if (template) {
+         if (typeof template !== 'string') {
+            return next(new AppError('Template must be a string', 400));
+         }
+         // convert HTML template to image
+         const image = await htmlToImage(promotion.title, template);
+         if (!image) {
+            return next(new AppError('Failed to convert HTML to image', 500));
+         }
+         // upload image to cloud storage
+         const uploadedImage = await uploadImageService(image);
+         if (!uploadedImage) {
+            return next(new AppError('Failed to upload promotion image', 500));
+         }
+         // delete old image if exists
+         if (promotion.coverImage) {
+            await deleteImageService(promotion.coverImage);
+         }
+         // add cover image URL to update data
+         updateData.coverImage = uploadedImage;
+      }
+      // Update promotion using service
+      const updatedPromotion = await updatePromotionService(promoId, updateData);
+      if (!updatedPromotion) {
+         return next(new AppError('Failed to update promotion', 500));
+      }
+      // Return response with updated promotion
+      return res.status(200).json({
+         status: 'success',
+         message: 'Promotion updated successfully',
+         data: {
+            promotion: updatedPromotion.toObject()
+         }
+      });
+   } catch (error) {
+      console.error('Error updating promotion:', error);
+      return next(new AppError('Internal server error', 500));
+   }
+};
+
+
 // Export the controller
 module.exports = {
-    createPromotionController, getActivePromotionController, getPromotionByIdController,
+    createPromotionController, getActivePromotionController, getPromotionByIdController, updatePromotionController,
 };
