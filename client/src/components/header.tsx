@@ -1,128 +1,150 @@
-// app/components/header/Header.tsx
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Search, Filter, ShoppingCart, User } from "lucide-react";
+import Link from 'next/link'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Filter, Search, ShoppingCart, User } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export default function Header() {
-  const pathname = usePathname();
-  const [search, setSearch] = useState("");
-  const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState({
-    category: "",
-    minPrice: "",
-    maxPrice: "",
-    order: "asc",
-  });
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-950 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60">
-      <div className="mx-auto max-w-screen-2xl flex items-center justify-between px-4 md:px-8 py-3 md:py-4">
-        {/* Left Section (Logo) */}
-        <div className="flex items-center flex-shrink-0">
-          <Link href="/" className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-            ShopHub
-          </Link>
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container max-w-screen-2xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between gap-4">
+          {/* Left - Logo */}
+          <div className="flex-shrink-0">
+            <Link href="/">
+              <h1 className="text-2xl font-bold text-[#5B3DF4]">ShopHub</h1>
+            </Link>
+          </div>
+
+          {/* Center - Desktop Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-3xl">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search products..."
+                className="pl-10 pr-12 py-2 h-10 w-full rounded-md border border-input bg-background text-base placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10"
+                  >
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 space-y-2">
+                  <select className="w-full border rounded-md px-2 py-2 text-sm">
+                    <option value="">Select Category</option>
+                    <option value="ui">UI Kits</option>
+                    <option value="ecommerce">E-commerce</option>
+                    <option value="dashboard">Dashboard</option>
+                    <option value="portfolio">Portfolio</option>
+                  </select>
+                  <Input type="number" placeholder="Min Price" />
+                  <Input type="number" placeholder="Max Price" />
+                  <select className="w-full border rounded-md px-2 py-1 text-sm">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          {/* Right - Icons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Mobile Search Icon */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-primary/10"
+                onClick={() => {
+                  setMobileSearchOpen((prev) => !prev)
+                  setMobileFilterOpen(false)
+                }}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            {/* Cart */}
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+              <ShoppingCart className="h-5 w-5" />
+            </Button>
+
+            {/* User Menu */}
+            <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+                  <User className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-40 space-y-2">
+                <Link href="/login" className="block text-sm">Login</Link>
+                <Link href="/signup" className="block text-sm">Signup</Link>
+                <Link href="/categories" className="block text-sm">Categories</Link>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
-        {/* Center Section (Search Bar + Filter) */}
-        <div className="relative flex-1 mx-6 max-w-4xl">
-          <Input
-            type="text"
-            placeholder="Search themes..."
-            className="w-full rounded-lg border-gray-300 pl-10 pr-14 text-sm focus:border-gray-400 focus:ring-0 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1.5"
-            onClick={() => setShowFilter((prev) => !prev)}
-          >
-            <Filter className="h-5 w-5 text-muted-foreground" />
-          </Button>
+        {/* Mobile Search Bar Expanded */}
+        {mobileSearchOpen && (
+          <div className="mt-4 md:hidden space-y-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search products..."
+                className="pl-10 pr-10 py-2 h-10 w-full rounded-md border border-input bg-background text-base placeholder:text-muted-foreground"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10"
+                onClick={() => setMobileFilterOpen((prev) => !prev)}
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
 
-          {/* Filter Dropdown */}
-          {showFilter && (
-            <div className="absolute top-12 z-50 w-full rounded-md border bg-white p-4 shadow-lg dark:bg-gray-900">
-              <div className="grid gap-3">
-                <Input
-                  placeholder="Category"
-                  value={filters.category}
-                  onChange={(e) =>
-                    setFilters({ ...filters, category: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Min Price"
-                  type="number"
-                  value={filters.minPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, minPrice: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Max Price"
-                  type="number"
-                  value={filters.maxPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, maxPrice: e.target.value })
-                  }
-                />
-                <select
-                  value={filters.order}
-                  onChange={(e) =>
-                    setFilters({ ...filters, order: e.target.value })
-                  }
-                  className="rounded-md border px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
-                >
+            {/* Mobile Filters Dropdown */}
+            {mobileFilterOpen && (
+              <div className="space-y-2 w-full">
+                <select className="w-full border rounded-md px-2 py-2 text-sm">
+                  <option value="">Select Category</option>
+                  <option value="ui">UI Kits</option>
+                  <option value="ecommerce">E-commerce</option>
+                  <option value="dashboard">Dashboard</option>
+                  <option value="portfolio">Portfolio</option>
+                </select>
+                <Input type="number" placeholder="Min Price" />
+                <Input type="number" placeholder="Max Price" />
+                <select className="w-full border rounded-md px-2 py-1 text-sm">
                   <option value="asc">Ascending</option>
                   <option value="desc">Descending</option>
                 </select>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Section (Icons) */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <ThemeToggle />
-          <Button variant="ghost" size="icon">
-            <ShoppingCart className="h-5 w-5" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href="/login">Login</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/signup">Signup</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/categories">Categories</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
-  );
+  )
 }
