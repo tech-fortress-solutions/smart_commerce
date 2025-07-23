@@ -14,6 +14,9 @@ export default function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
+  const selectStyles =
+    'w-full border rounded-md px-2 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600'
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-screen-2xl mx-auto px-4 py-4">
@@ -45,7 +48,7 @@ export default function Header() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-64 space-y-2">
-                  <select className="w-full border rounded-md px-2 py-2 text-sm">
+                  <select className={selectStyles}>
                     <option value="">Select Category</option>
                     <option value="ui">UI Kits</option>
                     <option value="ecommerce">E-commerce</option>
@@ -54,7 +57,7 @@ export default function Header() {
                   </select>
                   <Input type="number" placeholder="Min Price" />
                   <Input type="number" placeholder="Max Price" />
-                  <select className="w-full border rounded-md px-2 py-1 text-sm">
+                  <select className={selectStyles}>
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
                   </select>
@@ -127,7 +130,7 @@ export default function Header() {
             {/* Mobile Filters Dropdown */}
             {mobileFilterOpen && (
               <div className="space-y-2 w-full">
-                <select className="w-full border rounded-md px-2 py-2 text-sm">
+                <select className={selectStyles}>
                   <option value="">Select Category</option>
                   <option value="ui">UI Kits</option>
                   <option value="ecommerce">E-commerce</option>
@@ -136,7 +139,7 @@ export default function Header() {
                 </select>
                 <Input type="number" placeholder="Min Price" />
                 <Input type="number" placeholder="Max Price" />
-                <select className="w-full border rounded-md px-2 py-1 text-sm">
+                <select className={selectStyles}>
                   <option value="asc">Ascending</option>
                   <option value="desc">Descending</option>
                 </select>
