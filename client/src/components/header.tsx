@@ -18,27 +18,27 @@ export default function Header() {
     'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md shadow-sm transition-all">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-screen-2xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-6">
           
           {/* Left: Logo */}
           <div className="flex-shrink-0">
             <Link href="/">
-              <h1 className="text-2xl font-extrabold leading-none bg-gradient-to-r from-[#7C3AED] to-[#5B3DF4] bg-clip-text text-transparent tracking-tight">
-                SmartCommerce
+              <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #5B3DF4, #7C3AED)' }}>
+                ShopHub
               </h1>
             </Link>
           </div>
 
           {/* Middle: Search bar */}
-          <div className="hidden md:flex flex-1 max-w-4xl mx-8">
-            <div className="relative w-full">
+          <div className="hidden md:flex flex-1 mx-1 m-w-0">
+            <div className="relative w-full flex">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
                 type="text"
                 placeholder="Search products..."
-                className="pl-10 pr-12 py-2 h-11 w-full rounded-xl border border-input bg-background text-base placeholder:text-muted-foreground shadow-md focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 transition-all"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-12"
               />
               <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                 <PopoverTrigger asChild>
