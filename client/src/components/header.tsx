@@ -15,39 +15,41 @@ export default function Header() {
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   const selectStyles =
-    'w-full border rounded-md px-2 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600'
+    'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm transition-all">
       <div className="container max-w-screen-2xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between gap-4">
-          {/* Left - Logo */}
+          {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/">
-              <h1 className="text-2xl font-bold text-[#5B3DF4]">ShopHub</h1>
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#7C3AED] to-[#5B3DF4] bg-clip-text text-transparent tracking-tight">
+                ShopHub
+              </h1>
             </Link>
           </div>
 
-          {/* Center - Desktop Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-3xl">
+          {/* Desktop Search */}
+          <div className="hidden md:flex flex-1 max-w-4xl mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
                 type="text"
                 placeholder="Search products..."
-                className="pl-10 pr-12 py-2 h-10 w-full rounded-md border border-input bg-background text-base placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="pl-10 pr-12 py-2 h-11 w-full rounded-xl border border-input bg-background text-base placeholder:text-muted-foreground shadow-sm focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 transition-all"
               />
               <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
                   >
-                    <Filter className="h-4 w-4" />
+                    <Filter className="h-5 w-5" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 space-y-2">
+                <PopoverContent align="end" className="w-64 space-y-2 shadow-lg">
                   <select className={selectStyles}>
                     <option value="">Select Category</option>
                     <option value="ui">UI Kits</option>
@@ -55,8 +57,8 @@ export default function Header() {
                     <option value="dashboard">Dashboard</option>
                     <option value="portfolio">Portfolio</option>
                   </select>
-                  <Input type="number" placeholder="Min Price" />
-                  <Input type="number" placeholder="Max Price" />
+                  <Input type="number" placeholder="Min Price" className="focus:ring-[#5B3DF4]" />
+                  <Input type="number" placeholder="Max Price" className="focus:ring-[#5B3DF4]" />
                   <select className={selectStyles}>
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
@@ -66,14 +68,13 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Right - Icons */}
+          {/* Right Icons */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Mobile Search Icon */}
             <div className="md:hidden">
               <Button
                 variant="ghost"
                 size="icon"
-                className="hover:bg-primary/10"
+                className="hover:bg-primary/10 transition"
                 onClick={() => {
                   setMobileSearchOpen((prev) => !prev)
                   setMobileFilterOpen(false)
@@ -83,51 +84,48 @@ export default function Header() {
               </Button>
             </div>
 
-            {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Cart */}
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition">
               <ShoppingCart className="h-5 w-5" />
             </Button>
 
-            {/* User Menu */}
             <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+                <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition">
                   <User className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-40 space-y-2">
-                <Link href="/login" className="block text-sm">Login</Link>
-                <Link href="/signup" className="block text-sm">Signup</Link>
-                <Link href="/categories" className="block text-sm">Categories</Link>
+              <PopoverContent align="end" className="w-40 space-y-2 shadow-md">
+                <Link href="/login" className="block text-sm hover:text-[#5B3DF4] transition">Login</Link>
+                <Link href="/signup" className="block text-sm hover:text-[#5B3DF4] transition">Signup</Link>
+                <Link href="/categories" className="block text-sm hover:text-[#5B3DF4] transition">Categories</Link>
+                <Link href="/dashboard" className="block text-sm hover:text-[#5B3DF4] transition">Dashboard</Link>
               </PopoverContent>
             </Popover>
           </div>
         </div>
 
-        {/* Mobile Search Bar Expanded */}
+        {/* Mobile Search + Filter */}
         {mobileSearchOpen && (
-          <div className="mt-4 md:hidden space-y-2">
+          <div className="mt-4 md:hidden space-y-2 transition-all">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
                 type="text"
                 placeholder="Search products..."
-                className="pl-10 pr-10 py-2 h-10 w-full rounded-md border border-input bg-background text-base placeholder:text-muted-foreground"
+                className="pl-10 pr-10 py-2 h-11 w-full rounded-xl border border-input bg-background text-base placeholder:text-muted-foreground shadow-sm"
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10"
+                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
                 onClick={() => setMobileFilterOpen((prev) => !prev)}
               >
-                <Filter className="h-4 w-4" />
+                <Filter className="h-5 w-5" />
               </Button>
             </div>
 
-            {/* Mobile Filters Dropdown */}
             {mobileFilterOpen && (
               <div className="space-y-2 w-full">
                 <select className={selectStyles}>
@@ -137,8 +135,8 @@ export default function Header() {
                   <option value="dashboard">Dashboard</option>
                   <option value="portfolio">Portfolio</option>
                 </select>
-                <Input type="number" placeholder="Min Price" />
-                <Input type="number" placeholder="Max Price" />
+                <Input type="number" placeholder="Min Price" className="focus:ring-[#5B3DF4]" />
+                <Input type="number" placeholder="Max Price" className="focus:ring-[#5B3DF4]" />
                 <select className={selectStyles}>
                   <option value="asc">Ascending</option>
                   <option value="desc">Descending</option>
