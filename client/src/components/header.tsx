@@ -19,11 +19,11 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container max-w-screen-2xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-6">
+      <div className="container max-w-screen-2xl px-2 mx-auto sm:px-4 py-4">
+        <div className="flex items-center gap-1 justify-between sm:gap-6">
           
           {/* Left: Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Link href="/">
               <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #5B3DF4, #7C3AED)' }}>
                 ShopHub
