@@ -5,6 +5,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 import Loading from "./loading";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
   title: "Smart Commerce",
   description: "New generation e-commerce platform built for speed and scalability.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/globe.svg",
   },
   openGraph: {
     title: "Smart Commerce",
@@ -58,7 +60,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Suspense fallback={<Loading />}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <Header />
+            <main className="w-full min-h-screen bg-gray-50 dark:bg-gray-900">
+              {children}
+            </main>
+            <Footer />
+            </Providers>
         </Suspense>
         <Toaster />
       </body>
