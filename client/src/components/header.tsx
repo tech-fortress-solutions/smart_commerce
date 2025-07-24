@@ -26,7 +26,7 @@ export default function Header() {
           <div className="flex-shrink-0">
             <Link href="/">
               <h1 className="text-2xl font-extrabold leading-none bg-gradient-to-r from-[#7C3AED] to-[#5B3DF4] bg-clip-text text-transparent tracking-tight">
-                ShopHub
+                SmartCommerce
               </h1>
             </Link>
           </div>
