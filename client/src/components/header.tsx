@@ -1,18 +1,37 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, use } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Filter, Search, ShoppingCart, User } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { toast } from 'sonner'
 
 export default function Header() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/admin/category/all');
+        const data = await response.json();
+        if (data.status !== 'success') {
+          toast.error('Failed to fetch categories');
+          throw new Error(data.message);
+        }
+        setCategories(data.data);
+      } catch (error) {
+        toast.error('Error fetching categories');
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const selectStyles =
     'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
@@ -53,10 +72,11 @@ export default function Header() {
                 <PopoverContent align="end" className="w-64 space-y-2 shadow-lg">
                   <select className={selectStyles}>
                     <option value="">Select Category</option>
-                    <option value="ui">UI Kits</option>
-                    <option value="ecommerce">E-commerce</option>
-                    <option value="dashboard">Dashboard</option>
-                    <option value="portfolio">Portfolio</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                   <Input type="number" placeholder="Min Price" />
                   <Input type="number" placeholder="Max Price" />
@@ -135,10 +155,11 @@ export default function Header() {
               <div className="space-y-2 w-full">
                 <select className={selectStyles}>
                   <option value="">Select Category</option>
-                  <option value="ui">UI Kits</option>
-                  <option value="ecommerce">E-commerce</option>
-                  <option value="dashboard">Dashboard</option>
-                  <option value="portfolio">Portfolio</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
                 <Input type="number" placeholder="Min Price" />
                 <Input type="number" placeholder="Max Price" />
