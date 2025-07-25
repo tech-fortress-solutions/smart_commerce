@@ -484,8 +484,37 @@ const createAdminAccountController = async (req, res, next) => {
     }
 };
 
+
+// Verify auth status controller
+const verifyAuthStatusController = async (req, res, next) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return next(new AppError("Invalid or expired token", 403));
+        }
+
+        // remove password from user object
+        user.password = undefined;
+
+        // return response
+        return res.status(200).json({
+            status: "success",
+            message: "User authententication token verified successfully",
+            user: user.toObject()
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error);
+        }
+
+        console.error('Error verifying auth token: ', error);
+        return next(new AppError("An internal server error occured please try again later", 500));
+    }
+}
+
 // export functions
 module.exports = {
     createUserController, loginUserController, logoutUserController, forgotPasswordController,
     resetPasswordController, updateUserAccountController, deleteUserAccountController, createAdminAccountController,
+    verifyAuthStatusController,
 };
