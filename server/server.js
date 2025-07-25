@@ -1,9 +1,12 @@
 const http = require('http');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const app = require('./app');
 const PORT = process.env.PORT || 5000;
 const { redisClient } = require('./config/redis');
 const { testBucket } = require('./config/s3Config');
+
+dotenv.config();
 
 
 const server = http.createServer(app);

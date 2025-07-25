@@ -110,14 +110,14 @@ export default function Header() {
             <ThemeToggle />
 
             {/* Cart Icon */}
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition">
+            <Button variant="ghost" size="icon" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground h-10 w-10 hover:bg-primary/10">
               <ShoppingCart className="h-5 w-5" />
             </Button>
 
             {/* User Menu */}
             <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition">
+                <Button variant="ghost" size="icon" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground h-10 w-10 relative hover:bg-primary/10">
                   <User className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
