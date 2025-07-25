@@ -27,7 +27,7 @@ const createUserController = async (req, res, next) => {
         }
 
         if (!password || !validatePassword(password)) {
-            return next(new AppError('Invalid password', 400));
+            return next(new AppError('Password must be 8 characters long, contain an uppercase, lowercase, number and a special character', 400));
         }
 
         if (password !== confirmPassword) {
