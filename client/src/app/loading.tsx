@@ -9,7 +9,7 @@ export default function Loading() {
         {/* Animated Text */}
         <div className="text-center">
           <p className="text-xl font-semibold text-gray-700 dark:text-white animate-pulse">
-            Loading ${process.env.PUBLIC_APP_NAME}...
+            Loading {process.env.PUBLIC_APP_NAME}...
           </p>
         </div>
       </div>
