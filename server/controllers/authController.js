@@ -21,7 +21,6 @@ const createUserController = async (req, res, next) => {
         if (!firstname || !lastname) {
             return next(new AppError('First name and last name are required', 400));
         }
-
         if (!email || !validateEmail(email)) {
             return next(new AppError('Invalid email address', 400));
         }
@@ -114,7 +113,7 @@ const loginUserController = async (req, res, next) => {
         // verify password
         const isPasswordValid = await verifyPassword(password, user.password);
         if (!isPasswordValid) {
-            return next(new AppError('Invalid password', 401));
+            return next(new AppError('Invalid username or password', 401));
         }
         // create JWT token
         let token;
@@ -207,7 +206,7 @@ const forgotPasswordController = async (req, res, next) => {
                 return next(new AppError('Failed to create reset token', 500));
             }
             // send reset email
-            const resetUrl = `${process.env.FRONTEND_URL}/api/auth/user/password/reset?token=${resetToken}`;
+            const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
             const emailData = {
                 to: user.email,
                 subject: 'Password Reset Request',

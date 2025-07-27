@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 
 type User = {
@@ -80,6 +81,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const res = await api.post("/auth/user/login", data);
             setUser(res.data.user);
+            toast.success("Login successful!");
+            // Redirect based on user role
             router.push(res.data.user.role === "admin" ? "/admin/dashboard" : "/dashboard");
         } catch (error) {
             console.error("Login failed:", error);
