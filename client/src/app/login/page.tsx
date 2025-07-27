@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
     // State variables for form inputs and UI states
@@ -137,12 +138,25 @@ export default function LoginPage() {
                         Forgot your password?
                     </Link>
                     </div>
+
+                    {error && (
+                        <div className="text-red-500 text-sm mt-2">
+                        {error}
+                        </div>
+                    )}
                     <button
                     className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 px-4 py-2 w-full cursor-pointer"
                     type="submit"
                     style={{ backgroundImage: 'linear-gradient(to right, #6366f1, #a855f7)', color: 'white' }} // Gradient for button
                     >
-                    Sign In
+                    {loading ? (
+                        <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Signing In...
+                        </>
+                    ) : (
+                        "Sign In"
+                    )}
                     </button>
                 </form>
                 <div className="mt-6 text-center">
