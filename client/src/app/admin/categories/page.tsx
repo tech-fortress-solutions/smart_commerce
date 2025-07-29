@@ -49,6 +49,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 // Custom Layout Components
 import Sidebar from '@/components/Sidebar'
@@ -197,6 +198,7 @@ export default function CategoriesPage() {
   };
 
   return (
+    <ProtectedRoute role="admin">
     <div className="flex flex-col min-h-screen bg-background">
       <div className="flex flex-1">
         <Sidebar
@@ -510,5 +512,6 @@ export default function CategoriesPage() {
         />
       )}
     </div>
+    </ProtectedRoute>
   )
 }

@@ -35,8 +35,8 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
   // const [isCollapsed, setIsCollapsed] = useState(false); // Remove this line
 
   const navItems: NavItem[] = [
-    { href: "#", label: "Dashboard", icon: LayoutDashboard },
-    { href: "#", label: "Categories", icon: FolderTree },
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/categories", label: "Categories", icon: FolderTree },
     { href: "#", label: "Products", icon: Package },
     { href: "#", label: "Orders", icon: ShoppingCart },
     { href: "#", label: "Promotions", icon: Tag },

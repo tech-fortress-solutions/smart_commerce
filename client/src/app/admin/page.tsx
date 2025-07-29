@@ -16,12 +16,16 @@ import {
 import { cn } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 export default function DashboardPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const router = useRouter(); // Initialize useRouter
 
   return (
+    <ProtectedRoute role="admin">
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-1 w-full bg-muted/40">
         {/* Sidebar Component */}
@@ -116,26 +120,31 @@ export default function DashboardPage() {
                     title="Categories"
                     description="Manage product categories"
                     icon={FolderTree}
+                    href="/admin/categories" // Added href
                   />
                   <ActionCard
                     title="Products"
                     description="Add and manage products"
                     icon={Package}
+                    href="/admin/products" // Added href
                   />
                   <ActionCard
                     title="Orders"
                     description="View and manage orders"
                     icon={ShoppingCart}
+                    href="/admin/orders" // Added href
                   />
                   <ActionCard
                     title="Promotions"
                     description="Create and manage promotions"
                     icon={Tag}
+                    href="/admin/promotions" // Added href
                   />
                   <ActionCard
                     title="Reviews"
                     description="Manage customer reviews"
                     icon={Star}
+                    href="/admin/reviews" // Added href
                   />
                 </div>
               </div>
@@ -152,10 +161,11 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 
-// === Sub-components (StatCard, ActionCard) remain the same as before ===
+// === Sub-components (StatCard, ActionCard) ===
 
 type StatCardProps = {
   title: string;
@@ -189,22 +199,30 @@ type ActionCardProps = {
   title: string;
   description: string;
   icon: React.ElementType;
+  href: string; // Added href prop
 };
 
-const ActionCard = ({ title, description, icon: Icon }: ActionCardProps) => (
-  <div className="rounded-lg bg-card text-card-foreground shadow-sm group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg border hover:border-blue-500/30">
-    <div className="flex flex-col p-6 text-center pb-4 space-y-3">
-      <div className="mx-auto w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300">
-        <Icon className="w-6 h-6 md:w-8 md:h-8 text-blue-500 group-hover:scale-110 transition-transform duration-300" />
-      </div>
-      <div className="space-y-1">
-        <h3 className="tracking-tight text-base md:text-lg font-semibold group-hover:text-blue-500 transition-colors duration-300">
-          {title}
-        </h3>
-        <p className="text-xs md:text-sm text-muted-foreground group-hover:text-muted-foreground/80">
-          {description}
-        </p>
+const ActionCard = ({ title, description, icon: Icon, href }: ActionCardProps) => {
+  const router = useRouter(); // Initialize useRouter inside ActionCard
+
+  return (
+    <div
+      className="rounded-lg bg-card text-card-foreground shadow-sm group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg border hover:border-blue-500/30"
+      onClick={() => router.push(href)} // Add onClick to redirect
+    >
+      <div className="flex flex-col p-6 text-center pb-4 space-y-3">
+        <div className="mx-auto w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300">
+          <Icon className="w-6 h-6 md:w-8 md:h-8 text-blue-500 group-hover:scale-110 transition-transform duration-300" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="tracking-tight text-base md:text-lg font-semibold group-hover:text-blue-500 transition-colors duration-300">
+            {title}
+          </h3>
+          <p className="text-xs md:text-sm text-muted-foreground group-hover:text-muted-foreground/80">
+            {description}
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

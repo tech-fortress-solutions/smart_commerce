@@ -83,7 +83,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(res.data.user);
             toast.success("Login successful!");
             // Redirect based on user role
-            router.push(res.data.user.role === "admin" ? "/admin/dashboard" : "/dashboard");
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirect = searchParams.get("redirect");
+
+            if (redirect) {
+                router.push(redirect);
+            } else {
+                router.push(res.data.user.role === "admin" ? "/admin" : "/dashboard");
+            }
         } catch (error) {
             console.error("Login failed:", error);
             throw error;
