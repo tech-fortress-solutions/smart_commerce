@@ -21,6 +21,10 @@ const createCategoryController = async (req, res, next) => {
         }
         categoryData.name = sanitize(categoryData.name); // Sanitize category name input
 
+        if (categoryData.description) {
+            categoryData.description = sanitize(categoryData.description); // Sanitize category description input
+        }
+
         // Add author to category data
         categoryData.author = user._id;
 
@@ -104,6 +108,10 @@ const updateCategoryController = async (req, res, next) => {
         if (updatedCategoryData.name) {
             data.name = sanitize(updatedCategoryData.name); // Sanitize category name input
         }
+        // check if category description is provided
+        if (updatedCategoryData.description) {
+            data.description = sanitize(updatedCategoryData.description); // Sanitize category description input
+        }
         // check if category image is provided
         if (req.file) {
             // delete old image if exists
@@ -159,7 +167,7 @@ const deleteCategoryController = async (req, res, next) => {
         // delete category image if exists
         if (category.image) {
             const deletedImage = await deleteImageService(category.image);
-            if (!deletedImage || !deletedImage.deleted) {
+            if (!deletedImage) {
                 return next(new AppError('Failed to delete category image', 500));
             }
         }
