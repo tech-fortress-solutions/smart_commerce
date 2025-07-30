@@ -4,6 +4,7 @@ const { createCategoryService, getCategoryByIdService, getAllCategoriesService, 
     deleteCategoryService
  } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
+const { getProductsByCategoryService, deleteProductService } = require('../services/productService'); // Import product service if needed
 
 
 // Controller to handle category creation
@@ -176,6 +177,24 @@ const deleteCategoryController = async (req, res, next) => {
         if (!deletedCategory || !deletedCategory.deleted) {
             return next(new AppError('Failed to delete category', 500));
         }
+
+        // Delete products associated with this category
+        const products = await getProductsByCategoryService(id);
+        if (products && products.length > 0) {
+            for (const product of products) {
+                if (product.thumbnail) {
+                    await deleteImageService(product.thumbnail); // Delete product thumbnail if exists
+                }
+                if (product.images && product.images.length > 0) {
+                    for (const image of product.images) {
+                        await deleteImageService(image); // Delete each product image if exists
+                    }
+                }
+                // Delete the product itself
+                await deleteProductService(product._id);
+            }
+        }
+        
         // Return response indicating successful deletion
         res.status(200).json({
             status: 'success',
