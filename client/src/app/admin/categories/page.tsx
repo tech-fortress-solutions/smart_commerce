@@ -559,7 +559,7 @@ export default function CategoriesPage() {
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
                                         <AlertDialogCancel onClick={() => setCategoryToDeleteId(null)}>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteCategory}>Continue</AlertDialogAction>
+                                        <AlertDialogAction className="bg-red-600 hover:bg-red-500" onClick={handleDeleteCategory}>Continue</AlertDialogAction>
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   )}
