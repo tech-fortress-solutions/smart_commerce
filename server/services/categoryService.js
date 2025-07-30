@@ -56,7 +56,7 @@ const getCategoryByIdService = async (id) => {
 const getAllCategoriesService = async () => {
     try {
         // get all categories
-        const categories = await Category.find({});
+        const categories = await Category.find({}).populate('products');
         if (!categories || categories.length === 0) {
             throw new AppError("No Categories Found", 404);
         }

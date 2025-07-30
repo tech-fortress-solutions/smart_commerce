@@ -4,6 +4,7 @@ const { createCategoryService, getCategoryByIdService, getAllCategoriesService, 
     deleteCategoryService
  } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
+const { getProductsByCategoryService, deleteProductService } = require('../services/productService'); // Import product service if needed
 
 
 // Controller to handle category creation
@@ -20,6 +21,10 @@ const createCategoryController = async (req, res, next) => {
             return next(new AppError('Category name is required', 400));
         }
         categoryData.name = sanitize(categoryData.name); // Sanitize category name input
+
+        if (categoryData.description) {
+            categoryData.description = sanitize(categoryData.description); // Sanitize category description input
+        }
 
         // Add author to category data
         categoryData.author = user._id;
@@ -104,6 +109,10 @@ const updateCategoryController = async (req, res, next) => {
         if (updatedCategoryData.name) {
             data.name = sanitize(updatedCategoryData.name); // Sanitize category name input
         }
+        // check if category description is provided
+        if (updatedCategoryData.description) {
+            data.description = sanitize(updatedCategoryData.description); // Sanitize category description input
+        }
         // check if category image is provided
         if (req.file) {
             // delete old image if exists
@@ -159,7 +168,7 @@ const deleteCategoryController = async (req, res, next) => {
         // delete category image if exists
         if (category.image) {
             const deletedImage = await deleteImageService(category.image);
-            if (!deletedImage || !deletedImage.deleted) {
+            if (!deletedImage) {
                 return next(new AppError('Failed to delete category image', 500));
             }
         }
@@ -168,6 +177,24 @@ const deleteCategoryController = async (req, res, next) => {
         if (!deletedCategory || !deletedCategory.deleted) {
             return next(new AppError('Failed to delete category', 500));
         }
+
+        // Delete products associated with this category
+        const products = await getProductsByCategoryService(id);
+        if (products && products.length > 0) {
+            for (const product of products) {
+                if (product.thumbnail) {
+                    await deleteImageService(product.thumbnail); // Delete product thumbnail if exists
+                }
+                if (product.images && product.images.length > 0) {
+                    for (const image of product.images) {
+                        await deleteImageService(image); // Delete each product image if exists
+                    }
+                }
+                // Delete the product itself
+                await deleteProductService(product._id);
+            }
+        }
+        
         // Return response indicating successful deletion
         res.status(200).json({
             status: 'success',

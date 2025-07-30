@@ -10,6 +10,7 @@ export default function ProtectedRoute({ children, role }: { children: React.Rea
     const { user, loading } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
+    const [authorized, setAuthorized] = React.useState(false);
 
     useEffect(() => {
         if (!loading) {
@@ -19,11 +20,14 @@ export default function ProtectedRoute({ children, role }: { children: React.Rea
             } else if (user.role !== role) {
                 // User does not have the required role, redirect to home
                 router.replace("/");
+            } else {
+                // User is authenticated and has the required role
+                setAuthorized(true);
             }
         }
     }, [loading, user, role, pathname, router]);
 
-    if (loading) {
+    if (loading || !authorized) {
         return <Loading />;
 
     }
