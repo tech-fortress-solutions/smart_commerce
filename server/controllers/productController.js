@@ -52,8 +52,8 @@ const createProductController = async (req, res, next) => {
         }
 
         // get and upload cover and other images
-        if (req.files && req.files.cover) {
-            const coverImage = req.files.cover[0];
+        if (req.files && req.files.thumbnail) {
+            const coverImage = req.files.thumbnail[0];
             if (!coverImage) {
                 return next(new AppError('Cover image is required', 400));
             }
@@ -236,8 +236,8 @@ const updateProductController = async (req, res, next) => {
             updateData.promoTitle = sanitize(updateData.promoTitle);
         }
         // handle cover image update
-        if (req.files && req.files.cover) {
-            const coverImage = req.files.cover[0];
+        if (req.files && req.files.thumbnail) {
+            const coverImage = req.files.thumbnail[0];
             if (!coverImage) {
                 return next(new AppError('Cover image is missing', 400));
             }
