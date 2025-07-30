@@ -37,7 +37,7 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
   const navItems: NavItem[] = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
-    { href: "#", label: "Products", icon: Package },
+    { href: "/admin/products", label: "Products", icon: Package },
     { href: "#", label: "Orders", icon: ShoppingCart },
     { href: "#", label: "Promotions", icon: Tag },
     { href: "#", label: "Reviews", icon: Star },
