@@ -3,7 +3,7 @@ const { AppError } = require('../utils/error');
 const { createProductService, getAllProductsService, getProductsByCategoryService, getProductByIdService,
     updateProductService, deleteProductService, searchProductsService
  } = require('../services/productService');
-const { getCategoryByNameService } = require('../services/categoryService');
+const { getCategoryByNameService, getCategoryByIdService } = require('../services/categoryService');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 
 
@@ -34,7 +34,7 @@ const createProductController = async (req, res, next) => {
         if (productData.category) {
             productData.category = sanitize(productData.category.trim());
         }
-        const categoryObj = await getCategoryByNameService(productData.category);
+        const categoryObj = await getCategoryByIdService(productData.category);
         if (!categoryObj) {
             return next(new AppError('Category not found!', 404));
         }
@@ -52,8 +52,8 @@ const createProductController = async (req, res, next) => {
         }
 
         // get and upload cover and other images
-        if (req.files && req.files.cover) {
-            const coverImage = req.files.cover[0];
+        if (req.files && req.files.thumbnail) {
+            const coverImage = req.files.thumbnail[0];
             if (!coverImage) {
                 return next(new AppError('Cover image is required', 400));
             }
@@ -214,7 +214,7 @@ const updateProductController = async (req, res, next) => {
         // get category id if provided
         if (updateData.category) {
             updateData.category = sanitize(updateData.category);
-            const categoryObj = await getCategoryByNameService(updateData.category);
+            const categoryObj = await getCategoryByIdService(updateData.category);
             if (!categoryObj) {
                 return next(new AppError('Category not found!', 404));
             }
@@ -236,8 +236,8 @@ const updateProductController = async (req, res, next) => {
             updateData.promoTitle = sanitize(updateData.promoTitle);
         }
         // handle cover image update
-        if (req.files && req.files.cover) {
-            const coverImage = req.files.cover[0];
+        if (req.files && req.files.thumbnail) {
+            const coverImage = req.files.thumbnail[0];
             if (!coverImage) {
                 return next(new AppError('Cover image is missing', 400));
             }
