@@ -1,3 +1,5 @@
+const DOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
       deletePromotionService,
  } = require('../services/promotionService');
@@ -6,6 +8,10 @@ const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
 
+
+// Initialize DOMPurify with JSDOM
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
 
 // Create a new promotion
 const createPromotionController = async (req, res, next) => {
@@ -48,18 +54,14 @@ const createPromotionController = async (req, res, next) => {
             }))
          };
 
-         // convert HTML template to image
-         const image = await htmlToImage(promotionData.title, template);
-         if (!image) {
-            return next(new AppError('Failed to convert HTML to image', 500));
+         if (type === 'buyOneGetOne') {
+            promotionData.buyOneGetOne = true;
          }
-         // upload image to cloud storage
-         const uploadedImage = await uploadImageService(image);
-         if (!uploadedImage) {
-            return next(new AppError('Failed to upload promotion image', 500));
-         }
-         // add cover image URL to promotion data
-         promotionData.coverImage = uploadedImage;
+
+         // Sanitize HTML template
+         const sanitizedHTML = purify.sanitize(template);
+         // save sanitized HTML to a variable
+         promotionData.promoBanner = sanitizedHTML;
 
          // create promotion using service
          const newPromotion = await createPromotionService(promotionData);
@@ -89,6 +91,14 @@ const createPromotionController = async (req, res, next) => {
                if (!updatedProduct) {
                   return next(new AppError(`Failed to update product ${productData.name} for promotion`, 500));
                };
+            } else {
+               const updatedProduct = await updateProductService(productData._id, {
+                  promoId: newPromotion._id,
+                  deleteAt: (newPromotion.type !== 'new stock') ? newPromotion.endDate : null
+               });
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} for promotion`, 500));
+               }
             }
          }
 
@@ -203,22 +213,10 @@ const updatePromotionController = async (req, res, next) => {
          if (typeof template !== 'string') {
             return next(new AppError('Template must be a string', 400));
          }
-         // convert HTML template to image
-         const image = await htmlToImage(promotion.title, template);
-         if (!image) {
-            return next(new AppError('Failed to convert HTML to image', 500));
-         }
-         // upload image to cloud storage
-         const uploadedImage = await uploadImageService(image);
-         if (!uploadedImage) {
-            return next(new AppError('Failed to upload promotion image', 500));
-         }
-         // delete old image if exists
-         if (promotion.coverImage) {
-            await deleteImageService(promotion.coverImage);
-         }
+         // sanitize html template
+         const sanitizedHTML = purify.sanitize(template);
          // add cover image URL to update data
-         updateData.coverImage = uploadedImage;
+         updateData.promoBanner = sanitizedHTML;
       }
       // Update promotion using service
       const updatedPromotion = await updatePromotionService(promoId, updateData);
@@ -254,10 +252,6 @@ const deletePromotionController = async (req, res, next) => {
          return next(new AppError('Promotion not found', 404));
       }
 
-      // Delete promotion coverImage if exists
-      if (promotion.coverImage) {
-         await deleteImageService(promotion.coverImage);
-      }
       // Delete promotion using service
       const deletedPromotion = await deletePromotionService(promoId);
       if (!deletedPromotion) {
