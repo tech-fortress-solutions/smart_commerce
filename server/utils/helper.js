@@ -20,6 +20,7 @@ const extractFileKey = (url) => {
 
 
 const sanitize = (input) => {
+  console.log(input)
   if (typeof input !== 'string' && typeof input !== 'number' && typeof input !== 'boolean') {
     throw new AppError('Input must be a string, number or boolean', 400);
   }

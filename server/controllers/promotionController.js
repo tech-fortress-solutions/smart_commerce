@@ -125,13 +125,13 @@ const getActivePromotionController = async (req, res, next) => {
       if (!activePromotion) {
          return next(new AppError('No active promotion found', 404));
       }
+      // convert active promotions to objects
+      const activePromotions = activePromotion.map(promo => promo.toObject());
       // Return response with active promotion
       return res.status(200).json({
          status: 'success',
          message: 'Active promotion retrieved successfully',
-         data: {
-            promotion: activePromotion.toObject()
-         }
+         data: activePromotions
       });
    } catch (error) {
       console.error('Error getting active promotion:', error);
@@ -265,17 +265,23 @@ const deletePromotionController = async (req, res, next) => {
             continue; // Skip if product not found
          }
          // if product is in promotion and deleteAt is set, delete else update product
-         if (productData.inPromotion && productData.promoId.toString() === promoId) {
-            if (productData.deleteAt) {
-               // delete product thumbnail and images if exists
-               if (productData.thumbnail) {
-                  await deleteImageService(productData.thumbnail);
+         if (productData.inPromotion) {
+            if (product.quantity > 0) {
+               // Update product qunatity
+               const updateProductData = {
+                  quantity: productData.quantity + product.quantity, // Restore quantity
+               };
+               if (productData.promoId && productData.promoId.toString() === promoId) {
+                  updateProductData.promoId = null;
+                  updateProductData.promoTitle = null;
+                  updateProductData.promoType = 'none';
+                  updateProductData.inPromotion = false;
+                  updateProductData.deleteAt = null;
                }
-               for (const image of productData.images) {
-                  await deleteImageService(image);
+               const updatedProduct = await updateProductService(productData._id, updateProductData);
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} after promotion deletion`, 500));
                }
-               // delete product
-               await deleteProductService(productData._id);
             } else {
                // update product to remove promotion details
                const updatedProduct = await updateProductService(productData._id, {

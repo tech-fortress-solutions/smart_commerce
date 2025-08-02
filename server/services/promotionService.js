@@ -30,7 +30,7 @@ const createPromotionService = async (promotionData) => {
 const getActivePromotionService = async () => {
     try {
         // Get the latest active promotion
-        const activePromotion = await Promotion.findOne({ active: true }).sort({ createdAt: -1 })
+        const activePromotion = await Promotion.find({ active: true }).sort({ createdAt: -1 })
             .populate('products.product', 'thumbnail name currency description category images totalRating numReviews');
         
         if (!activePromotion) {

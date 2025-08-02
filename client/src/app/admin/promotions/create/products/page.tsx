@@ -54,7 +54,7 @@ type Product = {
 };
 
 type PromotionProduct = {
-  productId: string;
+  product: string;
   name: string;
   mainPrice: number;
   promoPrice: number;
@@ -181,7 +181,7 @@ const AddProductsPage = () => {
     const selectedProduct = products.find((p) => p._id === productId);
     if (selectedProduct) {
       setPromoProductForm({
-        productId: selectedProduct._id,
+        product: selectedProduct._id,
         name: selectedProduct.name,
         mainPrice: selectedProduct.price,
         promoPrice: selectedProduct.price,
@@ -193,7 +193,7 @@ const AddProductsPage = () => {
   };
 
   const handleAddPromoProduct = () => {
-    if (!promoProductForm.productId || !promoProductForm.promoPrice || !promoProductForm.quantity) {
+    if (!promoProductForm.product || !promoProductForm.promoPrice || !promoProductForm.quantity) {
       toast.error('Please fill in all product details.');
       return;
     }
@@ -234,12 +234,12 @@ const AddProductsPage = () => {
 
     try {
       const response = await api.post('/admin/product/create', formData);
-      const newProduct = response.data.data;
+      const newProduct = response.data.data[0];
       
       setPromoProducts((prev) => [
         ...prev,
         {
-          productId: newProduct._id,
+          product: newProduct._id,
           name: newProduct.name,
           mainPrice: newProduct.price,
           promoPrice: newProductFormData.promoPrice,
@@ -270,7 +270,7 @@ const AddProductsPage = () => {
         ...promotionData,
         template: bannerHtml,
         products: promoProducts.map(p => ({
-          product: p.productId,
+          product: p.product,
           mainPrice: p.mainPrice,
           promoPrice: p.promoPrice,
           quantity: p.quantity,
@@ -281,7 +281,7 @@ const AddProductsPage = () => {
       toast.success('Promotion created successfully! 🎉');
       sessionStorage.removeItem('promotionFormData');
       sessionStorage.removeItem('bannerHtml');
-      //router.push('/admin/promotions');
+      router.push('/admin/promotions');
     } catch (error) {
       toast.error('Failed to create promotion. Please try again.');
       console.error(error);
