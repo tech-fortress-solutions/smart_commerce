@@ -1,3 +1,5 @@
+const DOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 const { createPromotionService, getActivePromotionService, getPromotionByIdService, updatePromotionService,
       deletePromotionService,
  } = require('../services/promotionService');
@@ -6,6 +8,10 @@ const { AppError } = require('../utils/error');
 const { uploadImageService, deleteImageService } = require('../services/uploadService');
 const { sanitize, htmlToImage } = require('../utils/helper');
 
+
+// Initialize DOMPurify with JSDOM
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
 
 // Create a new promotion
 const createPromotionController = async (req, res, next) => {
@@ -48,18 +54,14 @@ const createPromotionController = async (req, res, next) => {
             }))
          };
 
-         // convert HTML template to image
-         const image = await htmlToImage(promotionData.title, template);
-         if (!image) {
-            return next(new AppError('Failed to convert HTML to image', 500));
+         if (type === 'buyOneGetOne') {
+            promotionData.buyOneGetOne = true;
          }
-         // upload image to cloud storage
-         const uploadedImage = await uploadImageService(image);
-         if (!uploadedImage) {
-            return next(new AppError('Failed to upload promotion image', 500));
-         }
-         // add cover image URL to promotion data
-         promotionData.coverImage = uploadedImage;
+
+         // Sanitize HTML template
+         const sanitizedHTML = purify.sanitize(template);
+         // save sanitized HTML to a variable
+         promotionData.promoBanner = sanitizedHTML;
 
          // create promotion using service
          const newPromotion = await createPromotionService(promotionData);
@@ -89,6 +91,14 @@ const createPromotionController = async (req, res, next) => {
                if (!updatedProduct) {
                   return next(new AppError(`Failed to update product ${productData.name} for promotion`, 500));
                };
+            } else {
+               const updatedProduct = await updateProductService(productData._id, {
+                  promoId: newPromotion._id,
+                  deleteAt: (newPromotion.type !== 'new stock') ? newPromotion.endDate : null
+               });
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} for promotion`, 500));
+               }
             }
          }
 
@@ -115,13 +125,13 @@ const getActivePromotionController = async (req, res, next) => {
       if (!activePromotion) {
          return next(new AppError('No active promotion found', 404));
       }
+      // convert active promotions to objects
+      const activePromotions = activePromotion.map(promo => promo.toObject());
       // Return response with active promotion
       return res.status(200).json({
          status: 'success',
          message: 'Active promotion retrieved successfully',
-         data: {
-            promotion: activePromotion.toObject()
-         }
+         data: activePromotions
       });
    } catch (error) {
       console.error('Error getting active promotion:', error);
@@ -203,22 +213,10 @@ const updatePromotionController = async (req, res, next) => {
          if (typeof template !== 'string') {
             return next(new AppError('Template must be a string', 400));
          }
-         // convert HTML template to image
-         const image = await htmlToImage(promotion.title, template);
-         if (!image) {
-            return next(new AppError('Failed to convert HTML to image', 500));
-         }
-         // upload image to cloud storage
-         const uploadedImage = await uploadImageService(image);
-         if (!uploadedImage) {
-            return next(new AppError('Failed to upload promotion image', 500));
-         }
-         // delete old image if exists
-         if (promotion.coverImage) {
-            await deleteImageService(promotion.coverImage);
-         }
+         // sanitize html template
+         const sanitizedHTML = purify.sanitize(template);
          // add cover image URL to update data
-         updateData.coverImage = uploadedImage;
+         updateData.promoBanner = sanitizedHTML;
       }
       // Update promotion using service
       const updatedPromotion = await updatePromotionService(promoId, updateData);
@@ -254,10 +252,6 @@ const deletePromotionController = async (req, res, next) => {
          return next(new AppError('Promotion not found', 404));
       }
 
-      // Delete promotion coverImage if exists
-      if (promotion.coverImage) {
-         await deleteImageService(promotion.coverImage);
-      }
       // Delete promotion using service
       const deletedPromotion = await deletePromotionService(promoId);
       if (!deletedPromotion) {
@@ -271,17 +265,23 @@ const deletePromotionController = async (req, res, next) => {
             continue; // Skip if product not found
          }
          // if product is in promotion and deleteAt is set, delete else update product
-         if (productData.inPromotion && productData.promoId.toString() === promoId) {
-            if (productData.deleteAt) {
-               // delete product thumbnail and images if exists
-               if (productData.thumbnail) {
-                  await deleteImageService(productData.thumbnail);
+         if (productData.inPromotion) {
+            if (product.quantity > 0) {
+               // Update product qunatity
+               const updateProductData = {
+                  quantity: productData.quantity + product.quantity, // Restore quantity
+               };
+               if (productData.promoId && productData.promoId.toString() === promoId) {
+                  updateProductData.promoId = null;
+                  updateProductData.promoTitle = null;
+                  updateProductData.promoType = 'none';
+                  updateProductData.inPromotion = false;
+                  updateProductData.deleteAt = null;
                }
-               for (const image of productData.images) {
-                  await deleteImageService(image);
+               const updatedProduct = await updateProductService(productData._id, updateProductData);
+               if (!updatedProduct) {
+                  return next(new AppError(`Failed to update product ${productData.name} after promotion deletion`, 500));
                }
-               // delete product
-               await deleteProductService(productData._id);
             } else {
                // update product to remove promotion details
                const updatedProduct = await updateProductService(productData._id, {

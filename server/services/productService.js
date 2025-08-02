@@ -140,7 +140,7 @@ const updateProductService = async (id, productData) => {
                 throw new AppError('No valid fields to update', 400);
             }
         } else {
-            const allowedFields = ['name', 'description', 'price', 'category', 'images', 'thumbnail', 'quantity', 'rating', 'numReviews'];
+            const allowedFields = ['name', 'description', 'price', 'category', 'images', 'thumbnail', 'quantity', 'rating', 'numReviews', 'promoId', 'inPromotion', 'promotion', 'promoTitle', 'deleteAt'];
             Object.keys(productData).forEach(key => {
                 if (!allowedFields.includes(key)) {
                     // remove any fields not allowed to be updated

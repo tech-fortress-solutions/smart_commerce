@@ -27,7 +27,7 @@ const promotionSchema = new mongoose.Schema({
     } }, // Applicable for buy one get one promos
     products: [promoProductSchema], // Array of products included in the promotion
     active: { type: Boolean, default: true }, // Whether the promotion is currently active
-    coverImage: { type: String, required: false }, // Cover image URL for the promotion
+    promoBanner: { type: String, required: false }, // Cover image URL for the promotion
 }, { timestamps: true });
 
 // Enable toJSON and toObject methods to include virtuals
