@@ -9,9 +9,9 @@ interface PromotionBannerProps {
   title: string;
   description: string;
   buttonText: string;
-  backgroundColor: string; // Now expects a Tailwind class
-  buttonColor: string; // Now expects a Tailwind class
-  textColor: string; // Now expects a Tailwind class
+  backgroundColor: string; // Tailwind class
+  buttonColor: string; // Tailwind class
+  textColor: string; // Tailwind class
   href?: string;
 }
 
@@ -27,28 +27,32 @@ const PromotionBanner: React.FC<PromotionBannerProps> = ({
 }) => {
   return (
     <div
-      className={`relative flex flex-col md:flex-row items-center justify-between p-6 rounded-lg shadow-lg overflow-hidden ${backgroundColor}`}
-      style={{ minHeight: "200px" }}
+      className={`relative flex flex-row items-center justify-between p-4 rounded-lg shadow-lg overflow-hidden ${backgroundColor}`}
+      style={{ minHeight: "150px" }}
     >
-      {/* Text Content */}
-      <div className="flex-1 text-center md:text-left z-10 mb-4 md:mb-0">
-        <h2 className={`text-3xl font-bold mb-2 ${textColor}`}>{title}</h2>
-        <p className={`text-lg mb-4 ${textColor}`}>{description}</p>
+      {/* Text Content - Placed first to appear on the left */}
+      <div className="flex-1 text-left mr-4 z-10">
+        <h2 className={`text-lg md:text-2xl font-bold mb-1 md:mb-2 ${textColor}`}>
+          {title}
+        </h2>
+        <p className={`text-xs md:text-sm mb-2 md:mb-4 ${textColor}`}>
+          {description}
+        </p>
         <a href={href} target="_blank" rel="noopener noreferrer">
           <Button
-            className={`px-6 py-3 rounded-md text-white font-semibold ${buttonColor}`}
+            className={`px-3 py-1 text-xs md:px-4 md:py-2 rounded-md text-white font-semibold ${buttonColor}`}
           >
             {buttonText}
           </Button>
         </a>
       </div>
 
-      {/* Image */}
-      <div className="md:w-1/3 flex justify-center items-center z-10">
+      {/* Image container - Placed second to appear on the right */}
+      <div className="w-1/3 flex justify-center items-center z-10">
         <img
           src={imageUrl}
           alt={title}
-          className="max-h-48 md:max-h-full object-contain"
+          className="max-h-24 md:max-h-36 object-contain"
         />
       </div>
 
