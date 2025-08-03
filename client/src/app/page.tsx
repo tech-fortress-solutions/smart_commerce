@@ -74,7 +74,7 @@ type Product = {
 
 // --- HELPER & SUB-COMPONENTS ---
 
-// NEW: ScrollAnimatedSection component to trigger animations on scroll
+// Reusable vertical slide-in on scroll for titles/sections
 const ScrollAnimatedSection: FC<{ children: ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => {
   const { ref, inView } = useInView({
     triggerOnce: true,
@@ -95,19 +95,42 @@ const ScrollAnimatedSection: FC<{ children: ReactNode; className?: string; delay
   );
 };
 
-// Existing AnimatedSection is no longer needed, replaced by ScrollAnimatedSection
-// const AnimatedSection: FC<{ children: ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => (
-//     <div
-//       className={`transition-all ease-out duration-[800ms] ${className}`}
-//       style={{
-//         transitionDelay: `${delay}ms`,
-//         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-//         opacity: 1, transform: 'translateY(0px)'
-//       }}
-//     >
-//       {children}
-//     </div>
-// );
+// Fixed: Component for left/right staggered animations on grid items
+const CardGridWithAnimation: FC<{ children: ReactNode; className?: string }> = ({ children, className }) => {
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  // Convert children to an array to map over
+  const items = React.Children.toArray(children);
+
+  return (
+    <div ref={ref} className={className}>
+      {items.map((child, index) => {
+        const isLeft = index % 2 === 0;
+        const delay = index * 100;
+
+        const animationClasses = inView
+          ? 'opacity-100 translate-x-0'
+          : isLeft
+          ? 'opacity-0 -translate-x-8' // Reduced from 20 to 8 for mobile screens
+          : 'opacity-0 translate-x-8'; // Reduced from 20 to 8 for mobile screens
+
+        return (
+          <div
+            key={index}
+            className={`transition-all duration-1000 ease-out transform ${animationClasses}`}
+            style={{ transitionDelay: `${delay}ms` }}
+          >
+            {child}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 
 const StarRating = ({ rating = 4.5 }: { rating?: number }) => (
   <div className="flex items-center gap-1">
@@ -223,17 +246,15 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Deals</h2>
                   <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Don't miss these amazing offers on premium products!</p>
               </ScrollAnimatedSection>
-              <ScrollAnimatedSection delay={400}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
-                  </div>
-              </ScrollAnimatedSection>
+              <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+              </CardGridWithAnimation>
           </div>
       </section>
     );
 };
 
-// --- NEW NewArrivals COMPONENT ---
+// --- NewArrivals COMPONENT refactored to use CardGridWithAnimation ---
 const NewArrivals = ({ products }: { products: Product[] }) => {
   const newArrivalsProducts = products.slice(0, 5);
   if (newArrivalsProducts.length === 0) return null;
@@ -245,17 +266,13 @@ const NewArrivals = ({ products }: { products: Product[] }) => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">New Arrivals</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Be the first to get your hands on our latest stock!</p>
         </ScrollAnimatedSection>
-        <ScrollAnimatedSection delay={400}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
-          </div>
-        </ScrollAnimatedSection>
+        <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+        </CardGridWithAnimation>
       </div>
     </section>
   );
 };
-// --- END OF NEW COMPONENT ---
-
 
 const CategoriesSection = ({ categories }: { categories: Category[] }) => {
     if(categories.length === 0) return null;
@@ -267,9 +284,8 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
                           <h2 className="text-3xl md:text-4xl font-bold">Shop Our Top Categories</h2>
                           <p className="text-lg text-muted-foreground mt-2">Find what you're looking for with our curated collections.</p>
               </ScrollAnimatedSection>
-              <ScrollAnimatedSection delay={400}>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                      {categories.map((category) => (
+              <CardGridWithAnimation className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                  {categories.map((category) => (
                       <Link href={`/categories/${category._id}`} key={category._id}>
                           <div className="group relative rounded-xl overflow-hidden text-white cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                               <Image src={category.image} alt={category.name} width={400} height={500} className="w-full h-72 object-cover transition-transform duration-500 group-hover:scale-110 brightness-[0.8]"/>
@@ -280,9 +296,8 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
                               </div>
                           </div>
                       </Link>
-                      ))}
-                  </div>
-              </ScrollAnimatedSection>
+                  ))}
+              </CardGridWithAnimation>
           </div>
       </section>
     );
@@ -296,20 +311,22 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
         if (categoryProducts.length === 0) return null;
 
         return (
-            <ScrollAnimatedSection key={category._id} delay={index * 150}>
-                <div className="flex flex-col sm:flex-row justify-between items-baseline mb-8">
-                    <div>
-                        <h2 className="text-3xl font-bold">{category.name}</h2>
-                        <p className="text-muted-foreground mt-1">{category.description}</p>
+            <div key={category._id}>
+                <ScrollAnimatedSection delay={index * 150}>
+                    <div className="flex flex-col sm:flex-row justify-between items-baseline mb-8">
+                        <div>
+                            <h2 className="text-3xl font-bold">{category.name}</h2>
+                            <p className="text-muted-foreground mt-1">{category.description}</p>
+                        </div>
+                        <Button variant="link" className="text-primary hover:text-primary/80 transition-colors p-0 h-auto mt-2 sm:mt-0">
+                            View All <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
                     </div>
-                    <Button variant="link" className="text-primary hover:text-primary/80 transition-colors p-0 h-auto mt-2 sm:mt-0">
-                        View All <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                </ScrollAnimatedSection>
+                <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {categoryProducts.map((product) => (<ProductCard key={product._id} product={product} />))}
-                </div>
-            </ScrollAnimatedSection>
+                </CardGridWithAnimation>
+            </div>
         )
       })}
     </div>
