@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, type FC, type ReactNode } from 'react'
+import React, { useState, useEffect, useCallback, useRef, type FC, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useInView } from 'react-intersection-observer'
 import {
   ChevronLeft,
   ChevronRight,
@@ -73,18 +74,40 @@ type Product = {
 
 // --- HELPER & SUB-COMPONENTS ---
 
-const AnimatedSection: FC<{ children: ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => (
+// NEW: ScrollAnimatedSection component to trigger animations on scroll
+const ScrollAnimatedSection: FC<{ children: ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => {
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  return (
     <div
-      className={`transition-all ease-out duration-[800ms] ${className}`}
+      ref={ref}
+      className={`transition-all duration-1000 ease-out transform ${className} ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
       style={{
         transitionDelay: `${delay}ms`,
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-        opacity: 1, transform: 'translateY(0px)'
       }}
     >
       {children}
     </div>
-);
+  );
+};
+
+// Existing AnimatedSection is no longer needed, replaced by ScrollAnimatedSection
+// const AnimatedSection: FC<{ children: ReactNode; className?: string; delay?: number }> = ({ children, className = '', delay = 0 }) => (
+//     <div
+//       className={`transition-all ease-out duration-[800ms] ${className}`}
+//       style={{
+//         transitionDelay: `${delay}ms`,
+//         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+//         opacity: 1, transform: 'translateY(0px)'
+//       }}
+//     >
+//       {children}
+//     </div>
+// );
 
 const StarRating = ({ rating = 4.5 }: { rating?: number }) => (
   <div className="flex items-center gap-1">
@@ -122,7 +145,7 @@ const HeroSection = ({ promotions }: { promotions: Promotion[] }) => {
   return (
     <section className="py-12 bg-background">
       <div className="container mx-auto px-4">
-        <AnimatedSection>
+        <ScrollAnimatedSection>
           <div className="relative overflow-hidden rounded-2xl shadow-xl">
             <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
               {activePromotions.map((promo) => (
@@ -145,7 +168,7 @@ const HeroSection = ({ promotions }: { promotions: Promotion[] }) => {
                   </>
               )}
           </div>
-        </AnimatedSection>
+        </ScrollAnimatedSection>
       </div>
     </section>
   )
@@ -196,15 +219,15 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
     return (
       <section className="pt-4 pb-16 sm:pt-8 sm:pb-24">
           <div className="container mx-auto px-4 space-y-12">
-              <AnimatedSection delay={200} className="text-center">
+              <ScrollAnimatedSection className="text-center" delay={200}>
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Deals</h2>
                   <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Don't miss these amazing offers on premium products!</p>
-              </AnimatedSection>
-              <AnimatedSection delay={400}>
+              </ScrollAnimatedSection>
+              <ScrollAnimatedSection delay={400}>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
                   </div>
-              </AnimatedSection>
+              </ScrollAnimatedSection>
           </div>
       </section>
     );
@@ -218,15 +241,15 @@ const NewArrivals = ({ products }: { products: Product[] }) => {
   return (
     <section className="py-16 sm:py-24 bg-secondary/30">
       <div className="container mx-auto px-4 space-y-12">
-        <AnimatedSection delay={200} className="text-center">
+        <ScrollAnimatedSection className="text-center" delay={200}>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">New Arrivals</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Be the first to get your hands on our latest stock!</p>
-        </AnimatedSection>
-        <AnimatedSection delay={400}>
+        </ScrollAnimatedSection>
+        <ScrollAnimatedSection delay={400}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
           </div>
-        </AnimatedSection>
+        </ScrollAnimatedSection>
       </div>
     </section>
   );
@@ -238,13 +261,13 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
     if(categories.length === 0) return null;
 
     return (
-      <section className="py-16 sm:py-24 bg-secondary/30">
+      <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 space-y-12">
-              <AnimatedSection delay={200} className="text-center">
+              <ScrollAnimatedSection className="text-center" delay={200}>
                           <h2 className="text-3xl md:text-4xl font-bold">Shop Our Top Categories</h2>
                           <p className="text-lg text-muted-foreground mt-2">Find what you're looking for with our curated collections.</p>
-              </AnimatedSection>
-              <AnimatedSection delay={400}>
+              </ScrollAnimatedSection>
+              <ScrollAnimatedSection delay={400}>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                       {categories.map((category) => (
                       <Link href={`/categories/${category._id}`} key={category._id}>
@@ -259,7 +282,7 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
                       </Link>
                       ))}
                   </div>
-              </AnimatedSection>
+              </ScrollAnimatedSection>
           </div>
       </section>
     );
@@ -273,7 +296,7 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
         if (categoryProducts.length === 0) return null;
 
         return (
-            <AnimatedSection key={category._id} delay={index * 150}>
+            <ScrollAnimatedSection key={category._id} delay={index * 150}>
                 <div className="flex flex-col sm:flex-row justify-between items-baseline mb-8">
                     <div>
                         <h2 className="text-3xl font-bold">{category.name}</h2>
@@ -286,7 +309,7 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {categoryProducts.map((product) => (<ProductCard key={product._id} product={product} />))}
                 </div>
-            </AnimatedSection>
+            </ScrollAnimatedSection>
         )
       })}
     </div>
@@ -405,12 +428,17 @@ export default function HomePage() {
   // Render Content
   return (
     <div className="min-h-screen bg-background">
-        <HeroSection promotions={promotions} />
-        <FeaturedDeals products={discountPromoProducts} />
-        {newStockProducts.length > 0 && <NewArrivals products={newStockProducts} />}
-        <CategoriesSection categories={categories} />
-        <ProductsByCategories products={products} categories={categories} />
-        <WhatsAppButton />
+      <style jsx global>{`
+        html {
+          scroll-behavior: smooth;
+        }
+      `}</style>
+      <HeroSection promotions={promotions} />
+      <FeaturedDeals products={discountPromoProducts} />
+      {newStockProducts.length > 0 && <NewArrivals products={newStockProducts} />}
+      <CategoriesSection categories={categories} />
+      <ProductsByCategories products={products} categories={categories} />
+      <WhatsAppButton />
     </div>
   )
 }
