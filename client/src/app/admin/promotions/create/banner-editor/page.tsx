@@ -70,6 +70,7 @@ const BannerEditorPage = () => {
     backgroundColor: backgroundColors[0],
     buttonColor: buttonColors[0],
     textColor: textColors[0], // Add textColor state with a default Tailwind class
+    href: '', // Optional link for the banner
   });
 
   const [isMobileOpen, setMobileOpen] = useState(false);
@@ -88,6 +89,7 @@ const BannerEditorPage = () => {
       ...prev,
       title: data.title,
       description: data.description,
+      href: `/${data.title.toLowerCase().replace(/\s+/g, '-')}`, // Generate a link based on the title
     }));
   }, [router]);
 
@@ -102,6 +104,7 @@ const BannerEditorPage = () => {
         backgroundColor={bannerProps.backgroundColor}
         buttonColor={bannerProps.buttonColor}
         textColor={bannerProps.textColor}
+        href={bannerProps.href}
       />
     );
     
