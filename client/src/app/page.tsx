@@ -210,6 +210,30 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
     );
 };
 
+// --- NEW NewArrivals COMPONENT ---
+const NewArrivals = ({ products }: { products: Product[] }) => {
+  const newArrivalsProducts = products.slice(0, 5);
+  if (newArrivalsProducts.length === 0) return null;
+
+  return (
+    <section className="py-16 sm:py-24 bg-secondary/30">
+      <div className="container mx-auto px-4 space-y-12">
+        <AnimatedSection delay={200} className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">New Arrivals</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Be the first to get your hands on our latest stock!</p>
+        </AnimatedSection>
+        <AnimatedSection delay={400}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+};
+// --- END OF NEW COMPONENT ---
+
+
 const CategoriesSection = ({ categories }: { categories: Category[] }) => {
     if(categories.length === 0) return null;
 
@@ -283,7 +307,8 @@ export default function HomePage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [promoProducts, setPromoProducts] = useState<Product[]>([]); // New state for promo products
+  const [discountPromoProducts, setDiscountPromoProducts] = useState<Product[]>([]);
+  const [newStockProducts, setNewStockProducts] = useState<Product[]>([]);
   
   // UI State
   const [loading, setLoading] = useState(true);
@@ -300,10 +325,15 @@ export default function HomePage() {
         api.get('/admin/product/all')
       ]);
       
-      const activePromotions = promoRes.data.data;
+      const activePromotions: Promotion[] = promoRes.data.data;
       
-      const newPromoProducts = activePromotions.flatMap((promotion: Promotion) =>
-        promotion.products.map((p: any) => ({
+      // Separate promotions into different types
+      const discountPromos = activePromotions.filter(p => p.type === 'discount promo' || p.type === 'buyOneGetOne');
+      const newStockPromos = activePromotions.filter(p => p.type === 'new stock');
+
+      // Process products from discount/BOGO promotions
+      const newDiscountPromoProducts = discountPromos.flatMap(promotion =>
+        promotion.products.map(p => ({
           _id: p.product._id,
           name: p.product.name,
           description: p.product.description,
@@ -316,8 +346,24 @@ export default function HomePage() {
         }))
       );
       
+      // Process products from new stock promotions
+      const newNewStockProducts = newStockPromos.flatMap(promotion =>
+        promotion.products.map(p => ({
+          _id: p.product._id,
+          name: p.product.name,
+          description: p.product.description,
+          price: p.mainPrice,
+          oldPrice: undefined,
+          isDeal: false,
+          rating: p.product.rating || 0,
+          thumbnail: p.product.thumbnail,
+          category: { _id: p.product.category, name: promotion.title }
+        }))
+      );
+      
       setPromotions(activePromotions);
-      setPromoProducts(newPromoProducts);
+      setDiscountPromoProducts(newDiscountPromoProducts);
+      setNewStockProducts(newNewStockProducts);
       setCategories(categoryRes.data.data);
       setProducts(productRes.data.data);
       
@@ -360,7 +406,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
         <HeroSection promotions={promotions} />
-        <FeaturedDeals products={promoProducts} />
+        <FeaturedDeals products={discountPromoProducts} />
+        {newStockProducts.length > 0 && <NewArrivals products={newStockProducts} />}
         <CategoriesSection categories={categories} />
         <ProductsByCategories products={products} categories={categories} />
         <WhatsAppButton />
