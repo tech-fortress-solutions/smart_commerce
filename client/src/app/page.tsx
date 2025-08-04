@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
+import { useCart } from '@/contexts/CartContext' // Import the useCart hook
 
 // --- TYPE DEFINITIONS ---
 type PromotionProduct = {
@@ -198,10 +199,22 @@ const HeroSection = ({ promotions }: { promotions: Promotion[] }) => {
 }
 
 const ProductCard = ({ product }: { product: Product }) => {
+  const { addItem } = useCart();
   const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
   
   // Conditionally set the price color
   const priceColorClass = product.isDeal ? 'text-destructive' : 'text-gray-900 dark:text-gray-50';
+
+  const handleAddToCart = () => {
+    addItem({
+      _id: product._id,
+      name: product.name,
+      thumbnail: product.thumbnail,
+      price: product.price,
+      oldPrice: product.oldPrice,
+      isDeal: product.isDeal
+    });
+  };
 
   return (
     <div className="product-card group border rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
@@ -227,7 +240,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             )}
         </div>
         <div className="flex gap-2 pt-2">
-            <Button variant="outline" className="flex-1 transition-transform duration-300 hover:-translate-y-0.5"><ShoppingCart className="h-4 w-4 mr-2"/>Add to Cart</Button>
+            <Button variant="outline" className="flex-1 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart}><ShoppingCart className="h-4 w-4 mr-2"/>Add to Cart</Button>
             <Button className="flex-1 bg-blue-600 text-primary-foreground hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5">Buy Now</Button>
         </div>
       </div>
@@ -334,7 +347,7 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
 )
 
 const WhatsAppButton = () => (
-    <a href="https://wa.me/+2348123456789" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 flex items-center justify-center">
+    <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 flex items-center justify-center">
         <MessageCircle className="h-7 w-7" />
     </a>
 )

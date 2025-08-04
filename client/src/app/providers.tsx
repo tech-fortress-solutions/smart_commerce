@@ -3,6 +3,7 @@
 import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +12,9 @@ export function Providers({ children }: { children: ReactNode }) {
       defaultTheme="system"
       enableSystem={true}
     >
-      <AuthProvider>{children}</AuthProvider>
+      <CartProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </CartProvider>
     </ThemeProvider>
   );
 };
