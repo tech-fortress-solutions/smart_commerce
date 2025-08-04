@@ -85,7 +85,7 @@ const CheckoutDialog: FC<{ isOpen: boolean; onOpenChange: (open: boolean) => voi
           />
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleCheckout} disabled={loading}>
+            <Button className="flex-1 bg-blue-600 hover:bg-blue-500" onClick={handleCheckout} disabled={loading}>
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -235,7 +235,7 @@ export default function Header() {
                         <span className="text-base font-semibold">Total:</span>
                         <span className="text-xl font-bold text-gray-900 dark:text-white">₦{cartTotal.toLocaleString()}</span>
                       </div>
-                      <Button className="w-full mt-4" onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}>
+                      <Button className="w-full mt-4 bg-blue-500 hover:bg-blue-600" onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}>
                         Checkout via WhatsApp
                       </Button>
                     </>
