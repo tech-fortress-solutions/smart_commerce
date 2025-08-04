@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import api from '@/lib/axios';
 
 export default function LoginPage() {
     // State variables for form inputs and UI states
@@ -14,6 +15,19 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
+
+    // Effect to create admin account on first load
+    useEffect(() => {
+        const createAdminAccount = async () => {
+            try {
+                // create admin account
+                await api.post('/auth/admin/register');
+            } catch (error: any) {
+                console.error("Error creating admin account:", error);
+            }
+        }
+        createAdminAccount();
+    }, []);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);

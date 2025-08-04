@@ -278,6 +278,15 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
               <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
               </CardGridWithAnimation>
+              {/* New: See More button */}
+              <div className="flex justify-center mt-8">
+                <Link href="/promotions/discount">
+                  <Button variant="outline" className="group">
+                    See More Deals
+                    <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
           </div>
       </section>
     );
@@ -298,6 +307,15 @@ const NewArrivals = ({ products }: { products: Product[] }) => {
         <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
         </CardGridWithAnimation>
+        {/* New: See More button */}
+        <div className="flex justify-center mt-8">
+          <Link href="/promotions/new-stock">
+            <Button variant="outline" className="group">
+              See All New Arrivals
+              <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
