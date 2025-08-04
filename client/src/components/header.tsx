@@ -5,12 +5,13 @@ import { useState, useEffect, type FC, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@/components/ui/popover'
-import { Filter, Search, ShoppingCart, User, X, Plus, Minus, Loader2, MessageCircle, ShoppingBag } from 'lucide-react'
+import { Filter, Search, ShoppingCart, User, X, Plus, Minus, Loader2, MessageCircle, ShoppingBag, LogOut } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { toast } from 'sonner'
-import { useCart } from '@/contexts/CartContext' // Import the useCart hook
+import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext' // Import the useAuth hook
 import Image from 'next/image'
-import api from '@/lib/axios' // Assuming you have an axios instance
+import api from '@/lib/axios'
 
 // --- Cart Item Component ---
 const CartItem: FC<{ item: any }> = ({ item }) => {
@@ -102,6 +103,8 @@ const CheckoutDialog: FC<{ isOpen: boolean; onOpenChange: (open: boolean) => voi
 
 // --- Header Component ---
 export default function Header() {
+  // Use the useAuth hook to get the current user and loading state
+  const { user, loading, logout } = useAuth();
   const { cartItems, cartTotal, cartCount } = useCart();
   const [filterOpen, setFilterOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -221,7 +224,7 @@ export default function Header() {
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Shopping Cart</h3>
                     <PopoverClose asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><X className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><X className="h-4 w-4" /></Button>
                     </PopoverClose>
                   </div>
                   {cartItems.length > 0 ? (
@@ -256,10 +259,23 @@ export default function Header() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-40 space-y-2 shadow-md">
-                  <Link href="/login" className="block text-sm hover:text-[#5B3DF4] transition">Login</Link>
-                  <Link href="/signup" className="block text-sm hover:text-[#5B3DF4] transition">Signup</Link>
-                  <Link href="/categories" className="block text-sm hover:text-[#5B3DF4] transition">Categories</Link>
-                  <Link href="/dashboard" className="block text-sm hover:text-[#5B3DF4] transition">Dashboard</Link>
+                  <Link href="/promotions" className="block text-sm hover:text-[#5B3DF4] transition">Promotions</Link>
+                  {/* Conditionally render links based on auth status */}
+                  {!user && !loading && (
+                    <>
+                      <Link href="/login" className="block text-sm hover:text-[#5B3DF4] transition">Login</Link>
+                      <Link href="/signup" className="block text-sm hover:text-[#5B3DF4] transition">Signup</Link>
+                    </>
+                  )}
+                  {user && !loading && (
+                    <>
+                      <Link href="/dashboard" className="block text-sm hover:text-[#5B3DF4] transition">Dashboard</Link>
+                      <Button variant="ghost" className="w-full justify-start text-sm px-0 py-0 h-auto font-normal hover:text-destructive" onClick={logout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
+                    </>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>

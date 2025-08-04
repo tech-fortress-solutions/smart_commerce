@@ -35,7 +35,8 @@ const stageOrderController = async (req, res, next) => {
                 currency: sanitize(p.currency || currency), // Use provided currency or default to 'NGN'
 
             })),
-            reference
+            reference,
+            currency: sanitize(currency), // Sanitize currency input
         };
 
         // claculate total amount from products
@@ -105,9 +106,9 @@ const retrieveOrderController = async (req, res, next) => {
 // Create a new order controller
 const createOrderController = async (req, res, next) => {
     try {
-        const { clientName, products, totalAmount, currency, clientId } = req.body;
+        const { clientName, products, totalAmount, clientId } = req.body;
         // validate order data
-        if (!clientName || !products || !totalAmount || !currency) {
+        if (!clientName || !products || !totalAmount) {
             throw new AppError('Invalid order data', 400);
         }
         if (!Array.isArray(products) || products.length === 0) {
