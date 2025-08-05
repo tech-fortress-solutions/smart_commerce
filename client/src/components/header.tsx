@@ -269,7 +269,7 @@ export default function Header() {
                   )}
                   {user && !loading && (
                     <>
-                      <Link href="/dashboard" className="block text-sm hover:text-[#5B3DF4] transition">Dashboard</Link>
+                      <Link href={user.role === 'admin' ? '/admin' : '/dashboard'} className="block text-sm hover:text-[#5B3DF4] transition">Dashboard</Link>
                       <Button variant="ghost" className="w-full justify-start text-sm px-0 py-0 h-auto font-normal hover:text-destructive" onClick={logout}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout

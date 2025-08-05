@@ -38,7 +38,7 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
     { href: "/admin/products", label: "Products", icon: Package },
-    { href: "#", label: "Orders", icon: ShoppingCart },
+    { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
     { href: "#", label: "Reviews", icon: Star },
     { href: "#", label: "Customers", icon: Users },
