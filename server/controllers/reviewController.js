@@ -108,7 +108,7 @@ const getProductReviewsController = async (req, res, next) => {
 
         // Get reviews by product ID using service
         const reviews = await getReviewsByProductService(productId);
-        if (!reviews || reviews.length === 0) {
+        if (!reviews) {
             return next(new AppError('No reviews found for this product', 404));
         }
         // Return response with the list of reviews

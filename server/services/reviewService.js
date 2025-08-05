@@ -40,9 +40,7 @@ const getReviewsByProductService = async (productId) => {
 
         // Get reviews by product ID
         const reviews = await Review.find({ product: productId}).populate('user', 'firstname lastname');
-        if (!reviews) {
-            throw new AppError("No reviews found", 404);
-        }
+        
 
         return reviews;
     } catch (error) {
