@@ -20,7 +20,6 @@ const extractFileKey = (url) => {
 
 
 const sanitize = (input) => {
-  console.log(input)
   if (typeof input !== 'string' && typeof input !== 'number' && typeof input !== 'boolean') {
     throw new AppError('Input must be a string, number or boolean', 400);
   }
@@ -68,7 +67,7 @@ const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, cu
   Reference: ${reference}
   Total Amount: ${formattedTotalAmount}
   Products: ${formattedProducts}${additionalProductsMessage}
-  [For Vendor Use Only] Click the link to create the order: ${baseUrl}/api/admin/orders/${reference}`;
+  [For Vendor Use Only] Click the link to create the order: ${baseUrl}/admin/orders/create/${reference}`;
 
   return encodeURIComponent(message);
 };

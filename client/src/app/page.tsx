@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { useCart } from '@/contexts/CartContext' // Import the useCart hook
+import { BuyNowDialog } from '@/components/BuyNow' // <-- New Import
 
 // --- TYPE DEFINITIONS ---
 type PromotionProduct = {
@@ -216,6 +217,15 @@ const ProductCard = ({ product }: { product: Product }) => {
     });
   };
 
+  // --- New Buy Now Logic ---
+  const [isBuyNowDialogOpen, setIsBuyNowDialogOpen] = useState(false);
+  const handleBuyNowClick = () => {
+    setIsBuyNowDialogOpen(true);
+  };
+  const handleCloseDialog = () => {
+    setIsBuyNowDialogOpen(false);
+  };
+
   return (
     <div className="product-card group border rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
       <div className="relative overflow-hidden rounded-t-lg">
@@ -241,9 +251,15 @@ const ProductCard = ({ product }: { product: Product }) => {
         </div>
         <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart}><ShoppingCart className="h-4 w-4 mr-2"/>Add to Cart</Button>
-            <Button className="flex-1 bg-blue-600 text-primary-foreground hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5">Buy Now</Button>
+            <Button onClick={handleBuyNowClick} className="flex-1 bg-blue-600 text-primary-foreground hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5">Buy Now</Button>
         </div>
       </div>
+      {/* New: Render the BuyNowDialog */}
+      <BuyNowDialog
+        isOpen={isBuyNowDialogOpen}
+        onClose={handleCloseDialog}
+        product={product}
+      />
     </div>
   )
 }
@@ -262,6 +278,15 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
               <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
               </CardGridWithAnimation>
+              {/* New: See More button */}
+              <div className="flex justify-center mt-8">
+                <Link href="/promotions/discount">
+                  <Button variant="outline" className="group">
+                    See More Deals
+                    <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </div>
           </div>
       </section>
     );
@@ -282,6 +307,15 @@ const NewArrivals = ({ products }: { products: Product[] }) => {
         <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {newArrivalsProducts.map((product) => <ProductCard key={product._id} product={product} />)}
         </CardGridWithAnimation>
+        {/* New: See More button */}
+        <div className="flex justify-center mt-8">
+          <Link href="/promotions/new-stock">
+            <Button variant="outline" className="group">
+              See All New Arrivals
+              <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -294,8 +328,8 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
       <section className="py-16 sm:py-24">
           <div className="container mx-auto px-4 space-y-12">
               <ScrollAnimatedSection className="text-center" delay={200}>
-                          <h2 className="text-3xl md:text-4xl font-bold">Shop Our Top Categories</h2>
-                          <p className="text-lg text-muted-foreground mt-2">Find what you're looking for with our curated collections.</p>
+                      <h2 className="text-3xl md:text-4xl font-bold">Shop Our Top Categories</h2>
+                      <p className="text-lg text-muted-foreground mt-2">Find what you're looking for with our curated collections.</p>
               </ScrollAnimatedSection>
               <CardGridWithAnimation className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                   {categories.map((category) => (
@@ -447,10 +481,10 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center gap-4 text-center px-4">
-           <AlertTriangle className="w-12 h-12 text-destructive" />
-           <h2 className="text-2xl font-semibold">Oops! Something went wrong.</h2>
-           <p className="text-muted-foreground max-w-md">{error}</p>
-           <Button onClick={fetchHomePageData}><Loader2 className={`mr-2 h-4 w-4 ${!loading ? 'hidden' : 'animate-spin'}`} /> Try Again</Button>
+            <AlertTriangle className="w-12 h-12 text-destructive" />
+            <h2 className="text-2xl font-semibold">Oops! Something went wrong.</h2>
+            <p className="text-muted-foreground max-w-md">{error}</p>
+            <Button onClick={fetchHomePageData}><Loader2 className={`mr-2 h-4 w-4 ${!loading ? 'hidden' : 'animate-spin'}`} /> Try Again</Button>
       </div>
     );
   }
