@@ -22,9 +22,9 @@ const deleteExpiredPromotions = async () => {
                     if (!productData) {
                         continue; // Skip if product not found
                     }
-                    // Remove promotion details from the product if product has no deleteAt field
-                    if (productData.inPromotion && productData.promoId.toString() === promotion._id.toString()) {
-                        if (!productData.deleteAt) {
+                    // Remove promotion details from the products in promotion
+                    if (productData.inPromotion) {
+                        if (true) {
                             const updatedProduct = await updateProductService(productData._id, {
                                 quantity: productData.quantity + product.quantity,
                                 promoId: null,
@@ -34,21 +34,6 @@ const deleteExpiredPromotions = async () => {
                             });
                             if (!updatedProduct) {
                                 throw new AppError('Failed to update product', 404);
-                            }
-                        } else {
-                            // If product has deleteAt field, delete the product
-                            const deletedProduct = await deleteProductService(productData._id);
-                            if (!deletedProduct) {
-                                throw new AppError('Failed to delete product', 404);
-                            }
-                            // Delete product thumbnail and images if they exist
-                            if (productData.thumbnail) {
-                                await deleteImageService(productData.thumbnail);
-                            }
-                            if (productData.images && productData.images.length > 0) {
-                                for (const image of productData.images) {
-                                    await deleteImageService(image);
-                                }
                             }
                         }
                     }

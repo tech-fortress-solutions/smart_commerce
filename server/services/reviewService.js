@@ -164,8 +164,21 @@ const deleteReviewService = async (reviewId) => {
 };
 
 
+// Get all reviews service
+const getAllReviewsService = async () => {
+    try {
+        // Get all reviews
+        const reviews = await Review.find().populate('user', 'firstname lastname');
+        return reviews;
+    } catch (error) {
+        console.error('Error getting all reviews:', error);
+        throw new AppError('Failed to get all reviews', 500);
+    }
+};
+
+
 // Export functions
 module.exports = {
     createReviewService, getReviewsByProductService, validateReviewService, updateReviewService,
-    getReviewByIdService, deleteReviewService,
+    getReviewByIdService, deleteReviewService, getAllReviewsService
 }

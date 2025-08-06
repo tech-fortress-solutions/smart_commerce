@@ -40,7 +40,7 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
     { href: "/admin/products", label: "Products", icon: Package },
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
-    { href: "#", label: "Reviews", icon: Star },
+    { href: "/admin/reviews", label: "Reviews", icon: Star },
     { href: "#", label: "Customers", icon: Users },
   ];
 

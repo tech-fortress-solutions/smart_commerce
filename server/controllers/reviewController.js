@@ -1,5 +1,5 @@
 const { createReviewService, getReviewsByProductService, validateReviewService, getReviewByIdService,
-    updateReviewService, deleteReviewService,
+    updateReviewService, deleteReviewService, getAllReviewsService
  } = require('../services/reviewService');
 const { getProductByIdService, updateProductService } = require('../services/productService');
 const { getOrderByReferenceService, updateOrderService } = require('../services/orderService');
@@ -252,7 +252,45 @@ const deleteReviewController = async (req, res, next) => {
 };
 
 
+// Get All Reviews Controller
+const getAllReviewsController = async (req, res, next) => {
+    try {
+        // Verify user is admin
+        const user = req.user;
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+        if (user.role !== 'admin') {
+            return next(new AppError('Only admins can view all reviews', 403));
+        }
+        // Get all reviews using service
+        const reviews = await getAllReviewsService();
+        if (reviews.length > 0) {
+            // Return response with list of reviews
+            return res.status(200).json({
+                status: 'success',
+                message: 'All reviews fetched successfully',
+                data: reviews.map(review => review.toObject())
+            });
+        } else {
+            // Return empty array if no reviews found
+            return res.status(200).json({
+                status: 'success',
+                data: []
+            });
+        }
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching all reviews:', error);
+        return next(new AppError('Failed to fetch all reviews', 500)); // Handle other errors gracefully
+    }
+}
+
+
 // export functions
 module.exports = {
     createReviewController, getProductReviewsController, updateReviewController, deleteReviewController,
+    getAllReviewsController
 }
