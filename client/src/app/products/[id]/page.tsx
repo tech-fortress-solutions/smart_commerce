@@ -378,8 +378,10 @@ const SingleProductPage: FC = () => {
 
     setIsSubmittingAdminReply(true);
     try {
-      const res = await api.put(`/admin/review/${reviewId}/respond`, {
-        comment: adminReply.comment,
+      const res = await api.put(`/review/${reviewId}`, {
+        response: {
+          comment: adminReply.comment,
+        }
       });
 
       if (res.data.status === 'success') {
@@ -640,7 +642,7 @@ const SingleProductPage: FC = () => {
                           {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                         {/* NEW: Reply button for admins */}
-                        {user?.role === 'admin' && !review.response && (
+                        {user?.role === 'admin' && !review.response?.comment && (
                           <Button
                             variant="outline"
                             size="sm"
