@@ -134,12 +134,12 @@ const CardGridWithAnimation: FC<{ children: ReactNode; className?: string }> = (
 };
 
 
-const StarRating = ({ rating = 4.5 }: { rating?: number }) => (
+const StarRating = ({ rating = 0 }: { rating?: number }) => (
   <div className="flex items-center gap-1">
     {[...Array(5)].map((_, i) => (
       <Star key={i} className={`h-4 w-4 ${i < Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'}`}/>
     ))}
-    <span className="text-sm text-muted-foreground ml-1">({rating.toFixed(1)})</span>
+    <span className="text-sm text-muted-foreground ml-1">({Number(rating).toFixed(1)})</span>
   </div>
 );
 
@@ -245,7 +245,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             <h3 className="font-semibold text-lg line-clamp-2 h-14">{product.name}</h3>
             <p className="text-sm text-muted-foreground line-clamp-2 h-10 mt-1">{product.description}</p>
           </div>
-          <StarRating rating={product.rating} />
+          <StarRating rating={product.rating || 0} />
           <div className="flex items-center gap-2">
               <span className={`text-xl font-bold ${priceColorClass}`}>₦{product.price.toLocaleString()}</span>
               {product.oldPrice && (
@@ -392,7 +392,7 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
 
 const WhatsAppButton = () => (
     <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 flex items-center justify-center">
-        <MessageCircle className="h-7 w-7" />
+      <MessageCircle className="h-7 w-7" />
     </a>
 )
 
@@ -437,7 +437,7 @@ export default function HomePage() {
           price: p.promoPrice,
           oldPrice: p.mainPrice,
           isDeal: true,
-          rating: p.product.rating || 0,
+          rating: Number(p.product.rating) || 0,
           thumbnail: p.product.thumbnail,
           category: { _id: p.product.category, name: promotion.title }
         }))
