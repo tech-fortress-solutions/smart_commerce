@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertTriangle,
   Send,
+  Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -241,7 +242,12 @@ const SingleProductPage: FC = () => {
   // NEW: State for the admin reply functionality
   const [adminReply, setAdminReply] = useState<{ reviewId: string | null; comment: string }>({ reviewId: null, comment: '' });
   const [isSubmittingAdminReply, setIsSubmittingAdminReply] = useState(false);
-
+  // NEW: State for editing user's review
+  const [userReview, setUserReview] = useState<Review | null>(null);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [updatedRating, setUpdatedRating] = useState(0);
+  const [updatedComment, setUpdatedComment] = useState('');
+  const [isUpdatingReview, setIsUpdatingReview] = useState(false);
 
   // --- Data Fetching Logic ---
   const fetchProductData = useCallback(async () => {
@@ -258,6 +264,16 @@ const SingleProductPage: FC = () => {
       const reviewsData: Review[] = reviewsRes.data.data;
       setReviews(reviewsData);
       
+      // NEW: Check if the logged-in user has already reviewed this product
+      if (user) {
+        const currentUserReview = reviewsData.find(r => r.user._id === user._id);
+        setUserReview(currentUserReview || null);
+        if (currentUserReview) {
+          setCurrentRating(currentUserReview.rating);
+          setReviewComment(currentUserReview.comment || '');
+        }
+      }
+
       if (reviewsData.length > 0) {
         const totalRating = reviewsData.reduce((acc, curr) => acc + curr.rating, 0);
         setReviewSummary({
@@ -285,7 +301,7 @@ const SingleProductPage: FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, user]);
 
   useEffect(() => {
     if (productId) {
@@ -396,6 +412,46 @@ const SingleProductPage: FC = () => {
       toast.error('Failed to submit response. Please try again.');
     } finally {
       setIsSubmittingAdminReply(false);
+    }
+  };
+
+  // NEW: Handler for initiating review update
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+    setUpdatedRating(review.rating);
+    setUpdatedComment(review.comment || '');
+  };
+
+  // NEW: Handler for submitting the updated review
+  const handleUpdateReview = async () => {
+    if (!user || !editingReview) return;
+
+    if (!updatedRating || !updatedComment) {
+      toast.error('Please provide a rating and a comment.');
+      return;
+    }
+
+    setIsUpdatingReview(true);
+    try {
+      const res = await api.put(`/review/${editingReview._id}`, {
+        rating: updatedRating,
+        comment: updatedComment,
+      });
+
+      if (res.data.status === 'success') {
+        toast.success('Your review has been updated!');
+        setEditingReview(null);
+        setUpdatedRating(0);
+        setUpdatedComment('');
+        fetchProductData(); // Re-fetch all data to show the updated review
+      } else {
+        toast.error(res.data.message || 'Failed to update review.');
+      }
+    } catch (err) {
+      console.error('Review update failed:', err);
+      toast.error('Failed to update review. Please try again.');
+    } finally {
+      setIsUpdatingReview(false);
     }
   };
   
@@ -516,7 +572,7 @@ const SingleProductPage: FC = () => {
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart} disabled={product.quantity === 0}>
+                <Button className="flex-1 bg-gray-100 hover:bg-gray-200 text-black transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart} disabled={product.quantity === 0}>
                   <ShoppingCart className="h-4 w-4 mr-2" /> Add to Cart
                 </Button>
                 <Button className="flex-1 bg-blue-600 hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleBuyNowClick} disabled={product.quantity === 0}>
@@ -579,49 +635,102 @@ const SingleProductPage: FC = () => {
             </div>
           </ScrollAnimatedSection>
 
-          {/* Leave a Review Form - Hidden for admins */}
+          {/* Leave a Review Form - Handles both creation and update */}
           {user?.role !== 'admin' && (
             <ScrollAnimatedSection delay={200}>
               <div className="bg-background rounded-xl shadow-lg p-6 mb-8">
-                <h3 className="text-xl font-semibold mb-4">Leave a Review</h3>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="font-medium">Your Rating:</span>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-6 w-6 cursor-pointer transition-colors ${
-                        star <= currentRating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'
-                      }`}
-                      onClick={() => setCurrentRating(star)}
+                {userReview ? (
+                  <h3 className="text-xl font-semibold mb-4">Update Your Review</h3>
+                ) : (
+                  <h3 className="text-xl font-semibold mb-4">Leave a Review</h3>
+                )}
+                
+                {/* Review Form - displays either the create or update form */}
+                {editingReview ? (
+                  // UPDATE REVIEW FORM
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Your Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-6 w-6 cursor-pointer transition-colors ${
+                            star <= updatedRating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'
+                          }`}
+                          onClick={() => setUpdatedRating(star)}
+                        />
+                      ))}
+                    </div>
+                    <Textarea
+                      placeholder="Write your updated comment here..."
+                      value={updatedComment}
+                      onChange={(e) => setUpdatedComment(e.target.value)}
                     />
-                  ))}
-                </div>
-                <Textarea
-                  placeholder="Write your comment here..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  className="mb-4"
-                />
-                <Input
-                  placeholder="Enter your order reference here (e.g., oZaBwrIy66)"
-                  value={orderReference}
-                  onChange={(e) => setOrderReference(e.target.value)}
-                  className="mb-4"
-                />
-                <Button
-                  className="bg-blue-600 hover:bg-blue-500"
-                  onClick={handleLeaveReview}
-                  disabled={submittingReview || !currentRating || !reviewComment || !orderReference}
-                >
-                  {submittingReview ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit Review'
-                  )}
-                </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingReview(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleUpdateReview}
+                        disabled={isUpdatingReview || !updatedRating || !updatedComment}
+                      >
+                        {isUpdatingReview ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          'Update Review'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // CREATE REVIEW FORM
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Your Rating:</span>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-6 w-6 cursor-pointer transition-colors ${
+                            star <= currentRating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'
+                          }`}
+                          onClick={() => setCurrentRating(star)}
+                        />
+                      ))}
+                    </div>
+                    <Textarea
+                      placeholder="Write your comment here..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                    />
+                    {!userReview && (
+                      <Input
+                        placeholder="Enter your order reference here (e.g., oZaBwrIy66)"
+                        value={orderReference}
+                        onChange={(e) => setOrderReference(e.target.value)}
+                      />
+                    )}
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-500"
+                      onClick={handleLeaveReview}
+                      disabled={submittingReview || !currentRating || !reviewComment || (!userReview && !orderReference)}
+                    >
+                      {submittingReview ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        userReview ? 'Update Review' : 'Submit Review'
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </ScrollAnimatedSection>
           )}
@@ -636,11 +745,25 @@ const SingleProductPage: FC = () => {
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold">{review.user.firstname} {review.user.lastname}</h4>
                         <StarRating rating={review.rating} />
+                        {/* NEW: Display a badge for the current user's review */}
+                        {user?._id === review.user._id && (
+                          <Badge variant="secondary" className="bg-primary/20 text-primary">Your Review</Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
                           {new Date(review.createdAt).toLocaleDateString()}
                         </span>
+                        {/* NEW: Edit button for the logged-in user's review */}
+                        {user?._id === review.user._id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditReview(review)}
+                          >
+                            <Edit className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
                         {/* NEW: Reply button for admins */}
                         {user?.role === 'admin' && !review.response?.comment && (
                           <Button
@@ -653,7 +776,51 @@ const SingleProductPage: FC = () => {
                         )}
                       </div>
                     </div>
-                    <p className="text-gray-800 dark:text-gray-200">{review.comment}</p>
+                    {/* NEW: Conditionally render update form for the specific review */}
+                    {editingReview && editingReview._id === review._id ? (
+                      <div className="mt-4 p-4 bg-secondary rounded-lg">
+                        <h5 className="font-semibold text-sm mb-2">Update Your Review</h5>
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="font-medium">New Rating:</span>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-6 w-6 cursor-pointer transition-colors ${
+                                star <= updatedRating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'
+                              }`}
+                              onClick={() => setUpdatedRating(star)}
+                            />
+                          ))}
+                        </div>
+                        <Textarea
+                          placeholder="Write your updated comment here..."
+                          value={updatedComment}
+                          onChange={(e) => setUpdatedComment(e.target.value)}
+                          className="mb-2"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setEditingReview(null)}>
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleUpdateReview}
+                            disabled={isUpdatingReview || !updatedRating || !updatedComment}
+                          >
+                            {isUpdatingReview ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Updating...
+                              </>
+                            ) : (
+                              'Update Review'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Display regular review comment if not editing
+                      <p className="text-gray-800 dark:text-gray-200">{review.comment}</p>
+                    )}
                     
                     {/* NEW: Admin Reply Form */}
                     {user?.role === 'admin' && adminReply.reviewId === review._id && (
