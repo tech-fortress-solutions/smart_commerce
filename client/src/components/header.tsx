@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, type FC, type ReactNode } from 'react'
+import { useState, useEffect, type FC } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@/components/ui/popover'
@@ -9,7 +10,7 @@ import { Filter, Search, ShoppingCart, User, X, Plus, Minus, Loader2, MessageCir
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { toast } from 'sonner'
 import { useCart } from '@/contexts/CartContext'
-import { useAuth } from '@/contexts/AuthContext' // Import the useAuth hook
+import { useAuth } from '@/contexts/AuthContext'
 import Image from 'next/image'
 import api from '@/lib/axios'
 
@@ -103,7 +104,7 @@ const CheckoutDialog: FC<{ isOpen: boolean; onOpenChange: (open: boolean) => voi
 
 // --- Header Component ---
 export default function Header() {
-  // Use the useAuth hook to get the current user and loading state
+  const router = useRouter()
   const { user, loading, logout } = useAuth();
   const { cartItems, cartTotal, cartCount } = useCart();
   const [filterOpen, setFilterOpen] = useState(false);
@@ -113,12 +114,20 @@ export default function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([])
+  
+  // <-- Corrected Search State -->
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('');
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/category/all');
-        const data = await response.json();
+        const response = await api.get('/admin/category/all');
+        const data = response.data;
         if (data.status !== 'success') {
           toast.error('Failed to fetch categories');
           throw new Error(data.message);
@@ -133,7 +142,27 @@ export default function Header() {
 
   const selectStyles =
     'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a search term.');
+      return;
+    }
 
+    const params = new URLSearchParams();
+    params.set('query', searchQuery); 
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (sortBy) params.set('sortBy', sortBy);
+    if (sortOrder) params.set('sortOrder', sortOrder);
+
+    router.push(`/search?${params.toString()}`);
+    setMobileSearchOpen(false);
+    setMobileFilterOpen(false); // Ensure the filter panel is closed
+  };
+  
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-20">
@@ -150,12 +179,14 @@ export default function Header() {
             </div>
 
             {/* Middle: Search bar */}
-            <div className="hidden md:flex flex-1 mx-1 m-w-0">
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 mx-1 m-w-0">
               <div className="relative w-full flex">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   type="text"
                   placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-12"
                 />
                 <Popover open={filterOpen} onOpenChange={setFilterOpen}>
@@ -169,24 +200,37 @@ export default function Header() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent align="end" className="w-64 space-y-2 shadow-lg">
-                    <select className={selectStyles}>
+                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className={selectStyles}>
                       <option value="">Select Category</option>
                       {categories.map((category) => (
-                        <option key={category._id} value={category._id}>
+                        <option key={category._id} value={category.name}>
                           {category.name}
                         </option>
                       ))}
                     </select>
-                    <Input type="number" placeholder="Min Price" />
-                    <Input type="number" placeholder="Max Price" />
-                    <select className={selectStyles}>
-                      <option value="asc">Ascending</option>
-                      <option value="desc">Descending</option>
+                    <Input type="number" placeholder="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+                    <Input type="number" placeholder="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+                    <select 
+                      value={sortBy ? `${sortBy}:${sortOrder}` : ''}
+                      onChange={(e) => {
+                        const [newSortBy, newSortOrder] = e.target.value.split(':');
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                      }}
+                      className={selectStyles}
+                    >
+                      <option value="">Sort By...</option>
+                      <option value="price:asc">Price: Low to High</option>
+                      <option value="price:desc">Price: High to Low</option>
+                      <option value="name:asc">Name: A-Z</option>
+                      <option value="name:desc">Name: Z-A</option>
                     </select>
+                    {/* The PopoverContent renders outside of the form. To fix this, we need to explicitly call the form's submit handler. */}
+                    <Button type="button" onClick={handleSearch} className="w-full">Search</Button>
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
+            </form>
 
             {/* Right: Icons */}
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -198,7 +242,8 @@ export default function Header() {
                   className="hover:bg-primary/10 transition"
                   onClick={() => {
                     setMobileSearchOpen((prev) => !prev)
-                    setMobileFilterOpen(false)
+                    // Close the filter menu if the search bar itself is closed
+                    if (!mobileSearchOpen) setMobileFilterOpen(false);
                   }}
                 >
                   <Search className="h-5 w-5" />
@@ -283,43 +328,65 @@ export default function Header() {
 
           {/* Mobile: Search + Filter */}
           {mobileSearchOpen && (
-            <div className="mt-4 md:hidden space-y-2 transition-all">
+            // A key change here: The form now submits normally on 'Enter'
+            // The filter button is now type="button" to prevent it from submitting the form
+            <form onSubmit={handleSearch} className="mt-4 md:hidden space-y-2 transition-all">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   type="text"
                   placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-10 py-2 h-11 w-full rounded-xl border border-input bg-background text-base placeholder:text-muted-foreground shadow-sm"
                 />
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
-                  onClick={() => setMobileFilterOpen((prev) => !prev)}
+                  // Key change: Use type="button" to prevent form submission on click
+                  type="button" 
+                  onClick={() => {
+                    // This now only toggles the filter panel without preventing form submission
+                    setMobileFilterOpen((prev) => !prev);
+                  }}
                 >
                   <Filter className="h-5 w-5" />
                 </Button>
               </div>
 
+              {/* This section is only rendered when the filter button is clicked */}
               {mobileFilterOpen && (
-                <div className="space-y-2 w-full">
-                  <select className={selectStyles}>
+                <div className="bg-background p-4 rounded-md shadow-lg space-y-2 w-full">
+                  <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className={selectStyles}>
                     <option value="">Select Category</option>
                     {categories.map((category) => (
-                      <option key={category._id} value={category._id}>
+                      <option key={category._id} value={category.name}>
                         {category.name}
                       </option>
                     ))}
                   </select>
-                  <Input type="number" placeholder="Min Price" />
-                  <Input type="number" placeholder="Max Price" />
-                  <select className={selectStyles}>
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                  </select>
+                  <Input type="number" placeholder="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+                  <Input type="number" placeholder="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+                  <select 
+                          value={sortBy ? `${sortBy}:${sortOrder}` : ''}
+                          onChange={(e) => {
+                            const [newSortBy, newSortOrder] = e.target.value.split(':');
+                            setSortBy(newSortBy);
+                            setSortOrder(newSortOrder);
+                          }}
+                          className={selectStyles}
+                        >
+                      <option value="">Sort By...</option>
+                      <option value="price:asc">Price: Low to High</option>
+                      <option value="price:desc">Price: High to Low</option>
+                      <option value="name:asc">Name: A-Z</option>
+                      <option value="name:desc">Name: Z-A</option>
+                    </select>
+                    <Button type="submit" className="w-full">Search</Button>
                 </div>
               )}
-            </div>
+            </form>
           )}
         </div>
       </header>
