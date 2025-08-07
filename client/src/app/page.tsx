@@ -290,7 +290,7 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
               </CardGridWithAnimation>
               {/* New: See More button */}
               <div className="flex justify-center mt-8">
-                <Link href="/promotions/discount">
+                <Link href="/promotions">
                   <Button variant="outline" className="group">
                     See More Deals
                     <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
