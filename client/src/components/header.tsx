@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, type FC, type ReactNode } from 'react'
+import { useState, useEffect, type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -126,8 +126,8 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/category/all');
-        const data = await response.json();
+        const response = await api.get('/admin/category/all');
+        const data = response.data;
         if (data.status !== 'success') {
           toast.error('Failed to fetch categories');
           throw new Error(data.message);
@@ -143,7 +143,6 @@ export default function Header() {
   const selectStyles =
     'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
   
-  // <-- Corrected Search Handler -->
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
@@ -152,15 +151,16 @@ export default function Header() {
     }
 
     const params = new URLSearchParams();
-    params.set('query', searchQuery); // <-- Changed from 'q' to 'query'
+    params.set('query', searchQuery); 
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
-    if (selectedCategory) params.set('category', selectedCategory); // <-- Now sends category name
-    if (sortBy) params.set('sortBy', sortBy); // <-- New parameter
-    if (sortOrder) params.set('sortOrder', sortOrder); // <-- New parameter
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (sortBy) params.set('sortBy', sortBy);
+    if (sortOrder) params.set('sortOrder', sortOrder);
 
     router.push(`/search?${params.toString()}`);
     setMobileSearchOpen(false);
+    setMobileFilterOpen(false); // Ensure the filter panel is closed
   };
   
   return (
@@ -203,7 +203,6 @@ export default function Header() {
                     <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className={selectStyles}>
                       <option value="">Select Category</option>
                       {categories.map((category) => (
-                        // <-- Changed from category._id to category.name -->
                         <option key={category._id} value={category.name}>
                           {category.name}
                         </option>
@@ -226,7 +225,8 @@ export default function Header() {
                       <option value="name:asc">Name: A-Z</option>
                       <option value="name:desc">Name: Z-A</option>
                     </select>
-                    <Button type="submit" className="w-full">Search</Button>
+                    {/* The PopoverContent renders outside of the form. To fix this, we need to explicitly call the form's submit handler. */}
+                    <Button type="button" onClick={handleSearch} className="w-full">Search</Button>
                   </PopoverContent>
                 </Popover>
               </div>
@@ -242,7 +242,8 @@ export default function Header() {
                   className="hover:bg-primary/10 transition"
                   onClick={() => {
                     setMobileSearchOpen((prev) => !prev)
-                    setMobileFilterOpen(false)
+                    // Close the filter menu if the search bar itself is closed
+                    if (!mobileSearchOpen) setMobileFilterOpen(false);
                   }}
                 >
                   <Search className="h-5 w-5" />
@@ -327,6 +328,8 @@ export default function Header() {
 
           {/* Mobile: Search + Filter */}
           {mobileSearchOpen && (
+            // A key change here: The form now submits normally on 'Enter'
+            // The filter button is now type="button" to prevent it from submitting the form
             <form onSubmit={handleSearch} className="mt-4 md:hidden space-y-2 transition-all">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
@@ -341,12 +344,18 @@ export default function Header() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
-                  onClick={() => setMobileFilterOpen((prev) => !prev)}
+                  // Key change: Use type="button" to prevent form submission on click
+                  type="button" 
+                  onClick={() => {
+                    // This now only toggles the filter panel without preventing form submission
+                    setMobileFilterOpen((prev) => !prev);
+                  }}
                 >
                   <Filter className="h-5 w-5" />
                 </Button>
               </div>
 
+              {/* This section is only rendered when the filter button is clicked */}
               {mobileFilterOpen && (
                 <div className="bg-background p-4 rounded-md shadow-lg space-y-2 w-full">
                   <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className={selectStyles}>
@@ -360,21 +369,21 @@ export default function Header() {
                   <Input type="number" placeholder="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
                   <Input type="number" placeholder="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
                   <select 
-                      value={sortBy ? `${sortBy}:${sortOrder}` : ''}
-                      onChange={(e) => {
-                        const [newSortBy, newSortOrder] = e.target.value.split(':');
-                        setSortBy(newSortBy);
-                        setSortOrder(newSortOrder);
-                      }}
-                      className={selectStyles}
-                    >
-                    <option value="">Sort By...</option>
-                    <option value="price:asc">Price: Low to High</option>
-                    <option value="price:desc">Price: High to Low</option>
-                    <option value="name:asc">Name: A-Z</option>
-                    <option value="name:desc">Name: Z-A</option>
-                  </select>
-                  <Button type="submit" className="w-full">Search</Button>
+                          value={sortBy ? `${sortBy}:${sortOrder}` : ''}
+                          onChange={(e) => {
+                            const [newSortBy, newSortOrder] = e.target.value.split(':');
+                            setSortBy(newSortBy);
+                            setSortOrder(newSortOrder);
+                          }}
+                          className={selectStyles}
+                        >
+                      <option value="">Sort By...</option>
+                      <option value="price:asc">Price: Low to High</option>
+                      <option value="price:desc">Price: High to Low</option>
+                      <option value="name:asc">Name: A-Z</option>
+                      <option value="name:desc">Name: Z-A</option>
+                    </select>
+                    <Button type="submit" className="w-full">Search</Button>
                 </div>
               )}
             </form>
