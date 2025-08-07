@@ -1,10 +1,13 @@
 const express = require('express');
-const { createReviewController, getProductReviewsController, updateReviewController, deleteReviewController } = require('../controllers/reviewController');
+const { createReviewController, getProductReviewsController, updateReviewController, deleteReviewController,
+    getAllReviewsController
+ } = require('../controllers/reviewController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // Route to create a review
+router.get('/all', authMiddleware, getAllReviewsController);
 router.post('/:reference', authMiddleware, createReviewController);
 router.get('/:productId', getProductReviewsController);
 router.put('/:reviewId', authMiddleware, updateReviewController);

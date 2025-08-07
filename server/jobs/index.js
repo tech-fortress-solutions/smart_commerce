@@ -1,6 +1,7 @@
 // background worker jobs entry point
 require('dotenv').config();
 const connectDB = require('../config/db');
+const Category = require('../models/category');
 
 // start worker function
 const startWorker = async () => {

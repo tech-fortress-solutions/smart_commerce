@@ -134,12 +134,12 @@ const CardGridWithAnimation: FC<{ children: ReactNode; className?: string }> = (
 };
 
 
-const StarRating = ({ rating = 4.5 }: { rating?: number }) => (
+const StarRating = ({ rating = 0 }: { rating?: number }) => (
   <div className="flex items-center gap-1">
     {[...Array(5)].map((_, i) => (
       <Star key={i} className={`h-4 w-4 ${i < Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/30'}`}/>
     ))}
-    <span className="text-sm text-muted-foreground ml-1">({rating.toFixed(1)})</span>
+    <span className="text-sm text-muted-foreground ml-1">({Number(rating).toFixed(1)})</span>
   </div>
 );
 
@@ -206,7 +206,8 @@ const ProductCard = ({ product }: { product: Product }) => {
   // Conditionally set the price color
   const priceColorClass = product.isDeal ? 'text-destructive' : 'text-gray-900 dark:text-gray-50';
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents the Link from firing
     addItem({
       _id: product._id,
       name: product.name,
@@ -219,7 +220,8 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   // --- New Buy Now Logic ---
   const [isBuyNowDialogOpen, setIsBuyNowDialogOpen] = useState(false);
-  const handleBuyNowClick = () => {
+  const handleBuyNowClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents the Link from firing
     setIsBuyNowDialogOpen(true);
   };
   const handleCloseDialog = () => {
@@ -228,31 +230,39 @@ const ProductCard = ({ product }: { product: Product }) => {
 
   return (
     <div className="product-card group border rounded-lg shadow-sm hover:shadow-xl transition-shadow duration-300">
-      <div className="relative overflow-hidden rounded-t-lg">
-        <Image src={product.thumbnail} alt={product.name} width={300} height={300} className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"/>
-        {discount > 0 && (
-          <Badge variant="destructive" className="absolute top-2 left-2 animate-pulse">-{discount}%</Badge>
-        )}
-        <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-9 w-9 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 rounded-full">
-          <Heart className="h-4 w-4 text-muted-foreground" />
+      <Link href={`/products/${product._id}`} passHref>
+        <div className="relative overflow-hidden rounded-t-lg">
+          <Image src={product.thumbnail} alt={product.name} width={300} height={300} className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"/>
+          {discount > 0 && (
+            <Badge variant="destructive" className="absolute top-2 left-2 animate-pulse">-{discount}%</Badge>
+          )}
+          <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-9 w-9 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 rounded-full">
+            <Heart className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </div>
+        <div className="p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg line-clamp-2 h-14">{product.name}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 h-10 mt-1">{product.description}</p>
+          </div>
+          <StarRating rating={product.rating || 0} />
+          <div className="flex items-center gap-2">
+              <span className={`text-xl font-bold ${priceColorClass}`}>₦{product.price.toLocaleString()}</span>
+              {product.oldPrice && (
+                <span className="text-sm text-muted-foreground line-through">₦{product.oldPrice.toLocaleString()}</span>
+              )}
+          </div>
+        </div>
+      </Link>
+      {/* The buttons are now outside the Link component and have their own padding */}
+      <div className="p-4 pt-0 flex gap-2">
+        <Button variant="outline" className="flex-1 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart}>
+          <ShoppingCart className="h-4 w-4 mr-2"/>
+          Add to Cart
         </Button>
-      </div>
-      <div className="p-4 space-y-3">
-        <div>
-          <h3 className="font-semibold text-lg line-clamp-2 h-14">{product.name}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 h-10 mt-1">{product.description}</p>
-        </div>
-        <StarRating rating={product.rating} />
-        <div className="flex items-center gap-2">
-            <span className={`text-xl font-bold ${priceColorClass}`}>₦{product.price.toLocaleString()}</span>
-            {product.oldPrice && (
-              <span className="text-sm text-muted-foreground line-through">₦{product.oldPrice.toLocaleString()}</span>
-            )}
-        </div>
-        <div className="flex gap-2 pt-2">
-            <Button variant="outline" className="flex-1 transition-transform duration-300 hover:-translate-y-0.5" onClick={handleAddToCart}><ShoppingCart className="h-4 w-4 mr-2"/>Add to Cart</Button>
-            <Button onClick={handleBuyNowClick} className="flex-1 bg-blue-600 text-primary-foreground hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5">Buy Now</Button>
-        </div>
+        <Button onClick={handleBuyNowClick} className="flex-1 bg-blue-600 text-primary-foreground hover:bg-blue-500 transition-transform duration-300 hover:-translate-y-0.5">
+          Buy Now
+        </Button>
       </div>
       {/* New: Render the BuyNowDialog */}
       <BuyNowDialog
@@ -382,7 +392,7 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
 
 const WhatsAppButton = () => (
     <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 flex items-center justify-center">
-        <MessageCircle className="h-7 w-7" />
+      <MessageCircle className="h-7 w-7" />
     </a>
 )
 
@@ -427,7 +437,7 @@ export default function HomePage() {
           price: p.promoPrice,
           oldPrice: p.mainPrice,
           isDeal: true,
-          rating: p.product.rating || 0,
+          rating: Number(p.product.rating) || 0,
           thumbnail: p.product.thumbnail,
           category: { _id: p.product.category, name: promotion.title }
         }))
@@ -481,10 +491,10 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center gap-4 text-center px-4">
-            <AlertTriangle className="w-12 h-12 text-destructive" />
-            <h2 className="text-2xl font-semibold">Oops! Something went wrong.</h2>
-            <p className="text-muted-foreground max-w-md">{error}</p>
-            <Button onClick={fetchHomePageData}><Loader2 className={`mr-2 h-4 w-4 ${!loading ? 'hidden' : 'animate-spin'}`} /> Try Again</Button>
+          <AlertTriangle className="w-12 h-12 text-destructive" />
+          <h2 className="text-2xl font-semibold">Oops! Something went wrong.</h2>
+          <p className="text-muted-foreground max-w-md">{error}</p>
+          <Button onClick={fetchHomePageData}><Loader2 className={`mr-2 h-4 w-4 ${!loading ? 'hidden' : 'animate-spin'}`} /> Try Again</Button>
       </div>
     );
   }
