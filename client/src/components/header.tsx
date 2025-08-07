@@ -302,7 +302,8 @@ export default function Header() {
               </div>
 
               {mobileFilterOpen && (
-                <div className="space-y-2 w-full">
+                // ADDED: bg-background, p-4, rounded-md, and shadow-lg for improved visibility
+                <div className="bg-background p-4 rounded-md shadow-lg space-y-2 w-full">
                   <select className={selectStyles}>
                     <option value="">Select Category</option>
                     {categories.map((category) => (
