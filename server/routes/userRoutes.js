@@ -5,7 +5,7 @@ const { getUserOrdersController } = require('../controllers/orderController');
 const router = express.Router();
 
 
-router.get('/reviews', authMiddleware, getUserOrdersController);
+router.get('/orders', authMiddleware, getUserOrdersController);
 
 // Export the router
 module.exports = router;
