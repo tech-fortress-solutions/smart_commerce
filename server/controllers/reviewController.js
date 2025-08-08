@@ -47,7 +47,7 @@ const createReviewController = async (req, res, next) => {
         }
 
         // Update order with user id
-        const updatedOrder = await updateOrderService(reference, { clientId: user._id });
+        const updatedOrder = await updateOrderService(reference, { clientId: user._id, clientName: user.firstname + ' ' + user.lastname });
         if (!updatedOrder) {
             return next(new AppError('Failed to update order with user ID', 500));
         }
