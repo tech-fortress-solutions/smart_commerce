@@ -1,5 +1,5 @@
 const { createReviewService, getReviewsByProductService, validateReviewService, getReviewByIdService,
-    updateReviewService, deleteReviewService, getAllReviewsService
+    updateReviewService, deleteReviewService, getAllReviewsService, getUserReviewsService
  } = require('../services/reviewService');
 const { getProductByIdService, updateProductService } = require('../services/productService');
 const { getOrderByReferenceService, updateOrderService } = require('../services/orderService');
@@ -289,8 +289,45 @@ const getAllReviewsController = async (req, res, next) => {
 }
 
 
+// Get User's Reviews Controller
+const getUserReviewsController = async (req, res, next) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return next(new AppError('User not authenticated', 401));
+        }
+
+        // Get user's reviews using service
+        const reviews = await getUserReviewsService(user._id);
+        if (!reviews) {
+            return next(new AppError('No reviews found for this user', 404));
+        }
+
+        if (reviews.length === 0) {
+            return res.status(200).json({
+                status: 'success',
+                message: 'No reviews found for this user',
+                data: []
+            });
+        }
+        // Return response with user's reviews
+        res.status(200).json({
+            status: 'success',
+            message: 'User reviews fetched successfully',
+            data: reviews.map(review => review.toObject())
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Re-throw custom AppError
+        }
+        console.error('Error fetching user reviews:', error);
+        return next(new AppError('Failed to fetch user reviews', 500)); // Handle other errors gracefully
+    }
+};
+
+
 // export functions
 module.exports = {
     createReviewController, getProductReviewsController, updateReviewController, deleteReviewController,
-    getAllReviewsController
+    getAllReviewsController, getUserReviewsController,
 }

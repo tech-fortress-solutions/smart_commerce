@@ -41,7 +41,7 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/promotions", label: "Promotions", icon: Tag },
     { href: "/admin/reviews", label: "Reviews", icon: Star },
-    { href: "#", label: "Customers", icon: Users },
+    { href: "/admin/account", label: "Account", icon: Users },
   ];
 
   const bottomNavItems: NavItem[] = [

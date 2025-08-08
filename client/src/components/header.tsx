@@ -304,7 +304,8 @@ export default function Header() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-40 space-y-2 shadow-md">
-                  <Link href="/promotions" className="block text-sm hover:text-[#5B3DF4] transition">Promotions</Link>
+                  <Link href="/promotions" className="block text-sm hover:text-[#5B3DF4] transition">Hot Deals</Link>
+                  <Link href="/promotions/new-arrivals" className="block text-sm hover:text-[#5B3DF4] transition">New Arrivals</Link>
                   {/* Conditionally render links based on auth status */}
                   {!user && !loading && (
                     <>

@@ -127,8 +127,8 @@ const OrdersPage = () => {
             : order
         )
       );
-    } catch (error) {
-      toast.error('Failed to confirm purchase. Please try again.');
+    } catch (error: any) {
+      toast.error(error?.response?.message || 'Failed to confirm purchase. Please try again.');
       console.error('Confirm purchase failed:', error);
     } finally {
       setActionLoading(null);

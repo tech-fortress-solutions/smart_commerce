@@ -1,6 +1,7 @@
 const express = require('express');
 const { stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
     getOrderByReferenceController, confirmPurchaseController, deleteOrderController, updateOrderController,
+    getUserOrdersController,
  } = require('../controllers/orderController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
@@ -10,6 +11,7 @@ const router = express.Router();
 // Route to stage an order
 router.post('/stage', stageOrderController);
 router.get('/', authMiddleware, getAllOrdersController);
+router.get('/user', authMiddleware, getUserOrdersController);
 router.put('/confirm/:reference', authMiddleware, confirmPurchaseController);
 router.get('/retrieve/:reference', authMiddleware, retrieveOrderController);
 router.post('/:reference', authMiddleware, createOrderController);
