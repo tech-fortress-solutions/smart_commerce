@@ -217,7 +217,7 @@ const getUserOrdersService = async (userId) => {
 
         // find orders by user ID
         const orders = await Order.find({ clientId: userId }).sort({ createdAt: -1 });
-        if (!orders || orders.length === 0) {
+        if (!orders) {
             throw new AppError('No orders found for this user', 404);
         }
         return orders;
@@ -229,7 +229,6 @@ const getUserOrdersService = async (userId) => {
         throw new AppError('Failed to retrieve user orders', 500);
     }
 };
-
 
 
 // export functions

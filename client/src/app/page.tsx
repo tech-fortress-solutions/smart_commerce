@@ -319,7 +319,7 @@ const NewArrivals = ({ products }: { products: Product[] }) => {
         </CardGridWithAnimation>
         {/* New: See More button */}
         <div className="flex justify-center mt-8">
-          <Link href="/promotions/new-stock">
+          <Link href="/promotions/new-arrivals">
             <Button variant="outline" className="group">
               See All New Arrivals
               <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />

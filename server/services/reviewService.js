@@ -177,8 +177,36 @@ const getAllReviewsService = async () => {
 };
 
 
+// Get user's reviews service
+const getUserReviewsService = async (userId) => {
+    try {
+        if (!userId) {
+            throw new AppError('No user ID provided', 400);
+        }
+
+        // Validate user ID
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new AppError('Invalid user ID', 400);
+        }
+
+        // Get reviews by user ID
+        const reviews = await Review.find({ user: userId }).populate('product', 'name category thumbnail').populate('user', 'firstname lastname');
+        if (!reviews) {
+            throw new AppError('No reviews found for this user', 404);
+        }
+        return reviews;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error; // Re-throw custom AppError
+        }
+        console.error('Error getting user reviews:', error);
+        throw new AppError('Failed to get user reviews', 500);
+    }
+};
+
+
 // Export functions
 module.exports = {
     createReviewService, getReviewsByProductService, validateReviewService, updateReviewService,
-    getReviewByIdService, deleteReviewService, getAllReviewsService
+    getReviewByIdService, deleteReviewService, getAllReviewsService, getUserReviewsService
 }
