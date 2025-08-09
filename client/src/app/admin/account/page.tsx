@@ -150,7 +150,7 @@ export default function AccountPage() {
     try {
       const payload = {
         oldPassword: passwordData.oldPassword,
-        newPassword: passwordData.newPassword,
+        password: passwordData.newPassword,
       };
 
       await api.put('/auth/user/account/update', payload);
