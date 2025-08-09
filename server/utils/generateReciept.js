@@ -132,14 +132,13 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
     </table>
 
     <div class="thank-you">
-      <h4>Thank you for shopping with us!</h4>
+      <h4>Thank you for choosing {{brand.name}}!</h4>
       <p>
-        We truly appreciate your business and trust in {{brand.name}}. If you have any
-        questions, feedback, or need support, don't hesitate to reach out to us through
-        any of our contact channels.
+       We truly value your trust and support. If you enjoyed your experience, we’d be grateful if you could leave us a review—it helps us improve and serve you better.
+       We look forward to welcoming you back soon for more great finds. 
       </p>
       <p>
-        We look forward to serving you again!
+        For any questions, feedback, or assistance, feel free to reach out through our contact channels.
       </p>
     </div>
 

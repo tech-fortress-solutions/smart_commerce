@@ -26,6 +26,15 @@ export default function Footer() {
                   />
                 ))}
               </div>
+              {/* Added the new link here, styled to stand out */}
+              <Link
+                href="https://web.facebook.com/techfortressolutions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-4 text-sm font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+              >
+                Built by Tech Fortress Solution
+              </Link>
             </div>
 
             {/* Quick Links */}
@@ -33,20 +42,6 @@ export default function Footer() {
               <h3 className="text-lg font-semibold text-foreground">Quick Links</h3>
               <ul className="space-y-2">
                 {['Home', 'Products', 'Categories', 'Deals', 'About Us'].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Customer Service */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Customer Service</h3>
-              <ul className="space-y-2">
-                {['Contact Us', 'Help & FAQ', 'Shipping Info', 'Returns', 'Track Order'].map((item) => (
                   <li key={item}>
                     <Link href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                       {item}
