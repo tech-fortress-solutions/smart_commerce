@@ -262,6 +262,7 @@ const confirmPurchaseController = async (req, res, next) => {
             phone: process.env.ADMIN_PHONE || '+1234567890',
             email: process.env.BRAND_EMAIL || 'realcharlieok@gmail.com',
             whatsapp: process.env.ADMIN_PHONE || '+1234567890',
+            website: process.env.BRAND_WEBSITE || 'https://example.com',
         };
         // generate receipt files
         const recieptUrls = await generateReceiptFiles(order.toObject(), brandInfo);
