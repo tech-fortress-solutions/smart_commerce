@@ -48,7 +48,7 @@ export default function CreateOrderPage({ params }: { params: { ref: string } })
     useEffect(() => {
         if (!orderReference) {
             toast.error('No order reference found in the URL. Redirecting...');
-            router.push('/admin/dashboard');
+            router.push('/admin');
         }
     }, [orderReference, router]);
 
@@ -74,7 +74,7 @@ export default function CreateOrderPage({ params }: { params: { ref: string } })
                     console.error("Failed to fetch order details:", error);
                     toast.error('Failed to load order details. Redirecting to dashboard.');
                     setFormData(null); // Clear form data on error
-                    router.push('/admin/dashboard'); // Redirect on API error
+                    router.push('/admin'); // Redirect on API error
                 } finally {
                     setLoading(false);
                 }

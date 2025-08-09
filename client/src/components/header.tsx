@@ -114,14 +114,15 @@ export default function Header() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([])
-  
-  // <-- Corrected Search State -->
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [sortOrder, setSortOrder] = useState('');
+
+  // Get the logo URL from the environment variable
+  const logoUrl = process.env.NEXT_PUBLIC_BRAND_LOGO_URL;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -142,7 +143,7 @@ export default function Header() {
 
   const selectStyles =
     'w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#5B3DF4] transition duration-200'
-  
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) {
@@ -151,7 +152,7 @@ export default function Header() {
     }
 
     const params = new URLSearchParams();
-    params.set('query', searchQuery); 
+    params.set('query', searchQuery);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
     if (selectedCategory) params.set('category', selectedCategory);
@@ -162,26 +163,37 @@ export default function Header() {
     setMobileSearchOpen(false);
     setMobileFilterOpen(false); // Ensure the filter panel is closed
   };
-  
+
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-20">
-        <div className="container max-w-screen-2xl px-2 mx-auto sm:px-4 py-4">
-          <div className="flex items-center gap-1 justify-between sm:gap-6">
-            
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-20 sm:h-24 md:h-20">
+        <div className="container max-w-screen-2xl px-2 mx-auto sm:px-4 py-4 h-full">
+          <div className="flex items-center gap-1 justify-between sm:gap-6 h-full">
+
             {/* Left: Logo */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0 h-full">
               <Link href="/">
-                <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #5B3DF4, #7C3AED)' }}>
-                  ShopHub
-                </h1>
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    alt="ShopHub Logo"
+                    width={250} // Adjust width as needed
+                    height={60} // Adjust height as needed
+                    className="h-22 w-auto sm:h-16 md:h-26 lg:h-30" // Responsive classes for larger logo
+                    priority // Prioritize loading the logo
+                  />
+                ) : (
+                  <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #5B3DF4, #7C3AED)' }}>
+                    ShopHub
+                  </h1>
+                )}
               </Link>
             </div>
 
             {/* Middle: Search bar */}
             <form onSubmit={handleSearch} className="hidden md:flex flex-1 mx-1 m-w-0">
-              <div className="relative w-full flex">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <div className="relative w-full flex items-center">
+                <Search className="absolute left-3 text-muted-foreground h-5 w-5" />
                 <Input
                   type="text"
                   placeholder="Search products..."
@@ -194,7 +206,7 @@ export default function Header() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
+                      className="absolute right-1 hover:bg-primary/10 transition"
                     >
                       <Filter className="h-5 w-5" />
                     </Button>
@@ -210,7 +222,7 @@ export default function Header() {
                     </select>
                     <Input type="number" placeholder="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
                     <Input type="number" placeholder="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
-                    <select 
+                    <select
                       value={sortBy ? `${sortBy}:${sortOrder}` : ''}
                       onChange={(e) => {
                         const [newSortBy, newSortOrder] = e.target.value.split(':');
@@ -233,7 +245,7 @@ export default function Header() {
             </form>
 
             {/* Right: Icons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0 h-full">
               {/* Mobile search icon */}
               <div className="md:hidden">
                 <Button
@@ -329,8 +341,6 @@ export default function Header() {
 
           {/* Mobile: Search + Filter */}
           {mobileSearchOpen && (
-            // A key change here: The form now submits normally on 'Enter'
-            // The filter button is now type="button" to prevent it from submitting the form
             <form onSubmit={handleSearch} className="mt-4 md:hidden space-y-2 transition-all">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
@@ -345,10 +355,8 @@ export default function Header() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-primary/10 transition"
-                  // Key change: Use type="button" to prevent form submission on click
-                  type="button" 
+                  type="button"
                   onClick={() => {
-                    // This now only toggles the filter panel without preventing form submission
                     setMobileFilterOpen((prev) => !prev);
                   }}
                 >
@@ -369,22 +377,22 @@ export default function Header() {
                   </select>
                   <Input type="number" placeholder="Min Price" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
                   <Input type="number" placeholder="Max Price" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
-                  <select 
-                          value={sortBy ? `${sortBy}:${sortOrder}` : ''}
-                          onChange={(e) => {
-                            const [newSortBy, newSortOrder] = e.target.value.split(':');
-                            setSortBy(newSortBy);
-                            setSortOrder(newSortOrder);
-                          }}
-                          className={selectStyles}
-                        >
-                      <option value="">Sort By...</option>
-                      <option value="price:asc">Price: Low to High</option>
-                      <option value="price:desc">Price: High to Low</option>
-                      <option value="name:asc">Name: A-Z</option>
-                      <option value="name:desc">Name: Z-A</option>
-                    </select>
-                    <Button type="submit" className="w-full">Search</Button>
+                  <select
+                    value={sortBy ? `${sortBy}:${sortOrder}` : ''}
+                    onChange={(e) => {
+                      const [newSortBy, newSortOrder] = e.target.value.split(':');
+                        setSortBy(newSortBy);
+                        setSortOrder(newSortOrder);
+                      }}
+                    className={selectStyles}
+                  >
+                    <option value="">Sort By...</option>
+                    <option value="price:asc">Price: Low to High</option>
+                    <option value="price:desc">Price: High to Low</option>
+                    <option value="name:asc">Name: A-Z</option>
+                    <option value="name:desc">Name: Z-A</option>
+                  </select>
+                  <Button type="submit" className="w-full">Search</Button>
                 </div>
               )}
             </form>
