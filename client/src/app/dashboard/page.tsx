@@ -241,7 +241,7 @@ export default function UserDashboardPage() {
 
     setIsUpdatingPassword(true)
     try {
-      await api.put('/auth/user/account/update', { oldPassword, newPassword })
+      await api.put('/auth/user/account/update', { oldPassword, password: newPassword })
       toast.success('Password updated successfully!')
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
     } catch (err: any) {
