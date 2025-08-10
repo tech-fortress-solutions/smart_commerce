@@ -27,7 +27,6 @@ const uploadImageService = async (file) => {
             Key: fileKey,
             Body: imageBuffer,
             ContentType: 'image/jpeg', // Set the content type to JPEG
-            ACL: 'public-read', // Set the ACL to public-read if you want the image to be publicly accessible
         };
 
         // Upload the image to S3
@@ -35,7 +34,7 @@ const uploadImageService = async (file) => {
         await s3Client.send(command);
 
         // Return the minio URL of the uploaded image
-        const imageUrl = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${fileKey}`;
+        const imageUrl = `${process.env.S3_CDN_URL}/${fileKey}`;
         return imageUrl;
     } catch (error) {
         if (error instanceof AppError) {

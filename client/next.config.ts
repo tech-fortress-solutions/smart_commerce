@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
         port: '9000',
         pathname: '/bucket/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'files.thebigphotocontest.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
