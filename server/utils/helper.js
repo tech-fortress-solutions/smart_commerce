@@ -11,7 +11,8 @@ const extractFileKey = (url) => {
     if (urlParts.pathname.startsWith(bucketPath)) {
       return urlParts.pathname.replace(bucketPath, '');
     }
-    return null;
+    // If URL is using custom domain (no bucket name in path)
+    return decodeURIComponent(urlParts.pathname.replace(/^\/+/, '')); // strip leading "/"
   } catch (error) {
     console.error('Invalid URL:', error);
     return null;
