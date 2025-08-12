@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
 import { cn } from '@/lib/utils';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react'; // Import Loader2
 import { renderToString } from 'react-dom/server';
 
 // Mock data for images and colors using Tailwind CSS classes
@@ -72,6 +72,7 @@ const BannerEditorPage = () => {
     textColor: textColors[0], // Add textColor state with a default Tailwind class
     href: '', // Optional link for the banner
   });
+  const [isLoading, setIsLoading] = useState(false); // New state for loading
 
   const [isMobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -93,7 +94,12 @@ const BannerEditorPage = () => {
     }));
   }, [router]);
 
-  const handleCreateBanner = () => {
+  const handleCreateBanner = async () => {
+    setIsLoading(true); // Start loading state
+
+    // Simulate an async operation, e.g., saving to a database
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     // Generate the HTML string from the component, passing Tailwind classes
     const bannerHtml = renderToString(
       <PromotionBanner
@@ -110,6 +116,8 @@ const BannerEditorPage = () => {
     
     sessionStorage.setItem('bannerHtml', bannerHtml);
     router.push('/admin/promotions/create/products');
+
+    setIsLoading(false); // End loading state
   };
 
   if (!promotionFormData) {
@@ -243,8 +251,15 @@ const BannerEditorPage = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={handleCreateBanner}>
-                  Next: Add Promotion Products
+                <Button onClick={handleCreateBanner} disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Next: Add Promotion Products'
+                  )}
                 </Button>
               </div>
             </div>

@@ -275,7 +275,8 @@ const ProductCard = ({ product }: { product: Product }) => {
 }
 
 const FeaturedDeals = ({ products }: { products: Product[] }) => {
-    const featuredProducts = products.filter(p => p.isDeal).slice(0, 5);
+    const sortedProducts = products.sort(() => Math.random() - 0.5); // Shuffle the products
+    const featuredProducts = sortedProducts.filter(p => p.isDeal).slice(0, 5);
     if(featuredProducts.length === 0) return null;
 
     return (
