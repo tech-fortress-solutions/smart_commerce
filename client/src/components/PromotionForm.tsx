@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PromotionFormData, PromotionType } from '@/types/promotion'; // We'll define this type below
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react'; // Import the Loader2 icon
 import { useRouter } from 'next/navigation';
 
 interface PromotionDetailsFormProps {
@@ -33,13 +33,25 @@ const initialFormData: PromotionFormData = {
 
 const PromotionDetailsForm: React.FC = () => {
   const [formData, setFormData] = useState<PromotionFormData>(initialFormData);
+  const [isLoading, setIsLoading] = useState(false); // New state for loading
   const router = useRouter();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsLoading(true); // Start loading state
+
+    // Simulate an asynchronous operation (e.g., an API call to save data)
+    // The actual operation here is just a session storage save and navigation,
+    // which is very fast, but this simulates a real-world scenario.
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     // Save form data to session storage or a global state management system
-    // This allows us to persist the data across the multi-step form.
     sessionStorage.setItem('promotionFormData', JSON.stringify(formData));
     router.push('/admin/promotions/create/banner-editor');
+
+    // Note: The loading state will stop here, but the user is immediately
+    // redirected. It's good practice to set it back to false, though
+    // in this specific case, the page transition will handle it.
+    setIsLoading(false);
   };
 
   return (
@@ -112,8 +124,15 @@ const PromotionDetailsForm: React.FC = () => {
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleSubmit}>
-            Create Promotion Banner
+          <Button type="button" onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Promotion Banner'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
