@@ -5,13 +5,14 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useInView } from 'react-intersection-observer'
-import { ShoppingCart, Star, Heart, MessageCircle, Loader2, AlertTriangle, ChevronRight, ShoppingBag } from 'lucide-react'
+import { ShoppingCart, Star, Heart, MessageCircle, Loader2, AlertTriangle, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { useCart } from '@/contexts/CartContext'
 import { BuyNowDialog } from '@/components/BuyNow'
+import { AxiosErrorType } from '@/types/error' // Assuming this type is defined in your types folder
 
 // --- TYPE DEFINITIONS ---
 type Product = {
@@ -205,13 +206,16 @@ export default function CategoryPage() {
           setCategoryName('Unknown Category');
         }
       }
-    } catch (err: any) {
-      if (err.response && err.response.status === 404) {
+    } catch (err) {
+      const errorObject = err as AxiosErrorType;
+      if (errorObject.response && errorObject.response.status === 404) {
         setError('No products found in this category.');
       } else {
-        console.error('Failed to fetch category products:', err);
-        setError('An unexpected error occurred while fetching products.');
-        toast.error('Failed to load category products.');
+        // Handle error response
+        const errorMessage = errorObject.response?.data.message || 'Failed to load products';
+        console.error('Failed to fetch category products:', errorObject);
+        setError(errorMessage);
+        toast.error(errorMessage); // Show error message to user
       }
       setProducts([]);
     } finally {

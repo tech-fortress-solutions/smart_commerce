@@ -158,7 +158,7 @@ export default function CategoriesPage() {
         formData.append('image', newCategoryImageFile); // 'image' should match backend's expected field name
       }
 
-      const response = await api.post('/admin/category/create', formData, {
+      await api.post('/admin/category/create', formData, {
         headers: {
           'Content-Type': 'multipart/form-data', // Important for file uploads
         },
@@ -461,7 +461,7 @@ export default function CategoriesPage() {
                                       <DialogHeader>
                                         <DialogTitle>Edit Category: {editingCategory.name}</DialogTitle>
                                         <DialogDescription>
-                                          Make changes to this category. Click save when you're done.
+                                          Make changes to this category. Click save when you&apos;re done.
                                         </DialogDescription>
                                       </DialogHeader>
                                       <div className="grid gap-4 py-4">
@@ -554,7 +554,7 @@ export default function CategoriesPage() {
                                       <AlertDialogHeader>
                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                          This action cannot be undone. This will permanently delete the category "<span className="font-semibold text-foreground">{category.name}</span>" and remove its data from our servers.
+                                          This action cannot be undone. This will permanently delete the category &quot;<span className="font-semibold text-foreground">{category.name}</span>&quot; and remove its data from our servers.
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>

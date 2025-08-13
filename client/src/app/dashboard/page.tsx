@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import {
   User,
   MapPin,
@@ -41,6 +42,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { AxiosErrorType } from '@/types/error' // Assuming this type is defined in your types folder
 
 // --- UPDATED ORDER TYPE ---
 type Order = {
@@ -138,17 +140,17 @@ export default function UserDashboardPage() {
     if (activeTab === 'orders') {
       setIsLoadingOrders(true)
       try {
-        const response = await api.get('http://localhost:5000/api/user/orders')
+        const response = await api.get('/user/orders')
         if (response.data.status === 'success') {
           // Convert backend data to the Order type
-          const formattedOrders = response.data.data.map((order: any) => ({
+          const formattedOrders = response.data.data.map((order: Order) => ({
             _id: order._id,
             reference: order.reference,
             createdAt: order.createdAt,
             totalAmount: order.totalAmount,
             currency: order.currency,
             status: order.status,
-            products: order.products.map((product: any) => ({
+            products: order.products.map((product) => ({
               description: product.description,
               quantity: product.quantity,
               price: product.price,
@@ -161,9 +163,11 @@ export default function UserDashboardPage() {
         } else {
           toast.error(response.data.message || 'Failed to fetch orders.')
         }
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to fetch orders.')
-        console.error('Error fetching orders:', error)
+      } catch (error) {
+        // Handle error response
+        const errorObject = error as AxiosErrorType
+        toast.error(errorObject.response?.data?.message || 'Failed to fetch orders.')
+        console.error('Error fetching orders:', errorObject)
       } finally {
         setIsLoadingOrders(false)
       }
@@ -172,15 +176,16 @@ export default function UserDashboardPage() {
     if (activeTab === 'reviews') {
       setIsLoadingReviews(true)
       try {
-        const response = await api.get('http://localhost:5000/api/review/user')
+        const response = await api.get('/review/user')
         if (response.data.status === 'success') {
           setReviews(response.data.data)
         } else {
           toast.error(response.data.message || 'Failed to fetch reviews.')
         }
-      } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to fetch reviews.')
-        console.error('Error fetching reviews:', error)
+      } catch (error) {
+        const errorObject = error as AxiosErrorType
+        toast.error(errorObject.response?.data?.message || 'Failed to fetch reviews.')
+        console.error('Error fetching reviews:', errorObject)
       } finally {
         setIsLoadingReviews(false)
       }
@@ -199,6 +204,7 @@ export default function UserDashboardPage() {
       setAccountDetails(prev => ({
         ...prev,
         [parent]: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ...(prev as any)[parent],
           [child]: value,
         },
@@ -214,8 +220,11 @@ export default function UserDashboardPage() {
     try {
       await api.put('/auth/user/account/update', accountDetails)
       toast.success('Account details updated successfully!')
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update account details.')
+    } catch (err) {
+      // Handle error response
+      const errorObject = err as AxiosErrorType
+      toast.error(errorObject.response?.data?.message || 'Failed to update account details.')
+      console.error('Error updating account details:', errorObject)
     } finally {
       setIsUpdatingDetails(false)
     }
@@ -244,8 +253,11 @@ export default function UserDashboardPage() {
       await api.put('/auth/user/account/update', { oldPassword, password: newPassword })
       toast.success('Password updated successfully!')
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update password.')
+    } catch (err) {
+      // Handle error response
+      const errorObject = err as AxiosErrorType
+      toast.error(errorObject.response?.data?.message || 'Failed to update password.')
+      console.error('Error updating password:', errorObject)
     } finally {
       setIsUpdatingPassword(false)
     }
@@ -296,8 +308,11 @@ export default function UserDashboardPage() {
       toast.success('Account deleted successfully.')
       await logout()
       router.push('/')
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete account.')
+    } catch (err) {
+      // Handle error response
+      const errorObject = err as AxiosErrorType
+      toast.error(errorObject.response?.data?.message || 'Failed to delete account.')
+      console.error('Error deleting account:', errorObject)
     } finally {
       setIsDeletingAccount(false)
       setIsDeleteModalOpen(false)
@@ -447,7 +462,7 @@ export default function UserDashboardPage() {
                   {/* Display product thumbnail if available */}
                   {review.product?.thumbnail && (
                     <div className="flex-shrink-0">
-                      <img src={review.product.thumbnail} alt={review.product.name} className="w-16 h-16 object-cover rounded-md" />
+                      <Image src={review.product.thumbnail} alt={review.product.name} width={64} height={64} className="object-cover rounded-md" />
                     </div>
                   )}
                   {/* Review Text Content */}
@@ -463,8 +478,8 @@ export default function UserDashboardPage() {
                     {/* Display seller's response if available */}
                     {review.response?.comment && (
                       <div className="mt-4 p-3 bg-secondary/30 rounded-lg border-l-4 border-primary">
-                        <p className="text-xs font-semibold text-primary">Seller's Response:</p>
-                        <p className="text-sm text-foreground/80 italic">"{review.response.comment}"</p>
+                        <p className="text-xs font-semibold text-primary">Seller&apos;s Response:</p>
+                        <p className="text-sm text-foreground/80 italic">&quot;{review.response.comment}&quot;</p>
                         <p className="text-xs text-muted-foreground mt-1">
                           - {review.response.responder} on {new Date(review.response.createdAt).toLocaleDateString()}
                         </p>

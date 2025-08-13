@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, type FC, type ReactNode } from 'react'
+import React, { useState, useEffect, useCallback, type FC, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useInView } from 'react-intersection-observer'
@@ -9,7 +9,6 @@ import {
   ChevronRight,
   ShoppingCart,
   Star,
-  ShoppingBag,
   Heart,
   MessageCircle,
   Loader2,
@@ -284,7 +283,7 @@ const FeaturedDeals = ({ products }: { products: Product[] }) => {
           <div className="container mx-auto px-4 space-y-12">
               <ScrollAnimatedSection className="text-center" delay={200}>
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Deals</h2>
-                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Don't miss these amazing offers on premium products!</p>
+                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Don&apos;t miss these amazing offers on premium products&#33;</p>
               </ScrollAnimatedSection>
               <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {featuredProducts.map((product) => <ProductCard key={product._id} product={product} />)}
@@ -340,7 +339,7 @@ const CategoriesSection = ({ categories }: { categories: Category[] }) => {
           <div className="container mx-auto px-4 space-y-12">
               <ScrollAnimatedSection className="text-center" delay={200}>
                       <h2 className="text-3xl md:text-4xl font-bold">Shop Our Top Categories</h2>
-                      <p className="text-lg text-muted-foreground mt-2">Find what you're looking for with our curated collections.</p>
+                      <p className="text-lg text-muted-foreground mt-2">Find what you&apos;re looking for with our curated collections.</p>
               </ScrollAnimatedSection>
               <CardGridWithAnimation className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                   {categories.map((category) => (

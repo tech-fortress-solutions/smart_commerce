@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
+import { AxiosErrorType } from '@/types/error';
 
 export default function LoginPage() {
     // State variables for form inputs and UI states
@@ -22,8 +23,10 @@ export default function LoginPage() {
             try {
                 // create admin account
                 await api.post('/auth/admin/register');
-            } catch (error: any) {
-                console.error("Error creating admin account:", error);
+            } catch (error) {
+                // Handle error response
+                const errorObject = error as AxiosErrorType;
+                console.error("Error creating admin account:", errorObject);
             }
         }
         createAdminAccount();
@@ -41,10 +44,12 @@ export default function LoginPage() {
         // await login({ email, password })
         try {
             await login({ email, password });
-        } catch (error: any) {
-            console.error("Login error:", error);
-            toast.error(error?.response?.data?.message || "Failed to login");
-            setError(error?.response?.data?.message || "Failed to login");
+        } catch (error) {
+            // Handle error response
+            const errorObject = error as AxiosErrorType;
+            console.error("Login error:", errorObject);
+            toast.error(errorObject.response?.data?.message || "Failed to login");
+            setError(errorObject.response?.data?.message || "Failed to login");
         } finally {
             setLoading(false);
         }
@@ -175,7 +180,7 @@ export default function LoginPage() {
                 </form>
                 <div className="mt-6 text-center">
                     <p className="text-sm text-muted-foreground">
-                    Don't have an account?{' '}
+                    Don&apos;t have an account?{' '}
                     <Link className="text-primary hover:underline font-medium cursor-pointer" href="/signup">
                         Sign up
                     </Link>

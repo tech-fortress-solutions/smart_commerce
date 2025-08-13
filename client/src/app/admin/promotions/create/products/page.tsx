@@ -39,6 +39,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
 import api from '@/lib/axios';
 import Image from 'next/image';
+import { PromotionFormData } from '@/types/promotion'; // Assuming this type is defined in your types folder
+import { AxiosErrorType } from '@/types/error'; // Assuming this type is defined in your types folder
 
 // Type Definitions
 type Category = { _id: string; name: string };
@@ -82,7 +84,7 @@ const initialNewProductFormData: NewProductFormData = {
 
 const AddProductsPage = () => {
   const router = useRouter();
-  const [promotionData, setPromotionData] = useState<any>(null);
+  const [promotionData, setPromotionData] = useState<PromotionFormData | null>(null);
   const [bannerHtml, setBannerHtml] = useState<string>('');
   const [isMobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -132,7 +134,9 @@ const AddProductsPage = () => {
         setProducts(productsRes.data.data);
         setCategories(categoriesRes.data.data);
       } catch (error) {
-        toast.error('Failed to load products and categories.');
+        const errorMessage = (error as AxiosErrorType).response?.data.message || 'Failed to load data';
+        toast.error(errorMessage);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }

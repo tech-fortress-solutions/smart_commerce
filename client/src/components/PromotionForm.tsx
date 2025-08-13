@@ -19,9 +19,6 @@ import { PromotionFormData, PromotionType } from '@/types/promotion'; // We'll d
 import { Plus, Loader2 } from 'lucide-react'; // Import the Loader2 icon
 import { useRouter } from 'next/navigation';
 
-interface PromotionDetailsFormProps {
-  onFormSubmit: (data: PromotionFormData) => void;
-}
 
 const initialFormData: PromotionFormData = {
   title: '',

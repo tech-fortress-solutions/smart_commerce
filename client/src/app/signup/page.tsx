@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Eye, EyeOff } from "lucide-react";
+import { AxiosErrorType } from "@/types/error";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -54,10 +55,11 @@ export default function SignupPage() {
       });
       toast.success("Account created successfully!");
       router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      setError(error?.response?.data?.message || "Failed to create account");
-      toast.error(error?.response?.data?.message || "Failed to create account");
+    } catch (error) {
+      const errorObject = error as AxiosErrorType;
+      console.error("Signup error:", errorObject);
+      setError(errorObject?.response?.data?.message || "Failed to create account");
+      toast.error(errorObject?.response?.data?.message || "Failed to create account");
     } finally {
       setLoading(false);
     }

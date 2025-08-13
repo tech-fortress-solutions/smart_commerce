@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Plus,
   Pencil,
   Trash2,
   Menu,
@@ -92,10 +91,6 @@ export default function PromotionsPage() {
     Omit<PromotionFormData, 'bannerHtml' | 'createdAt' | '_id'> | null
   >(null);
 
-  // Delete Dialog State - No longer needed at the top level
-  const [promotionToDelete, setPromotionToDelete] = useState<Promotion | null>(
-    null
-  );
 
   // View Dialog State
   const [isViewOpen, setViewOpen] = useState(false);
@@ -217,7 +212,7 @@ export default function PromotionsPage() {
                     Promotions
                   </h1>
                   <p className="text-muted-foreground">
-                    Create, view, and manage all your store's promotions.
+                    Create&#44; view&#44; and manage all your store&apos;s promotions.
                   </p>
                 </div>
                 <PromotionDetailsForm />

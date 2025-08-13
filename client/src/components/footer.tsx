@@ -16,7 +16,7 @@ export default function Footer() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-primary">ShopHub</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Your trusted online marketplace for quality products at great prices. We're committed to providing exceptional shopping experience.
+                Your trusted online marketplace for quality products at great prices. We&apos;re committed to providing exceptional shopping experience.
               </p>
               <div className="flex space-x-3">
                 {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
@@ -58,7 +58,7 @@ export default function Footer() {
                 <div className="flex items-center space-x-3">
                   <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground text-sm">
-                    123 Commerce St, Business District, City 12345
+                    123 Commerce St&#44; Business District&#44; City 12345
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">

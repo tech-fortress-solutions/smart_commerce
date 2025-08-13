@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Loader2,
-  ChevronLeft,
   Menu,
   CheckCircle,
   FileText,
@@ -38,6 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { AxiosErrorType } from '@/types/error';
 
 // Type Definitions
 type Product = {
@@ -61,8 +61,8 @@ type Order = {
   updatedAt: string;
   paidAt?: string;
   // Use a different name like recieptPdfUrl to avoid confusion
-  recieptPdf?: string;
-  recieptImage?: string;
+  receiptPdf?: string;
+  receiptImage?: string;
 };
 
 type PaidOrderResponse = {
@@ -90,14 +90,16 @@ const OrdersPage = () => {
     try {
       const response = await api.get('/admin/orders');
       // Update this to correctly map the receipt data from the API to the Order type
-      const fetchedOrders: Order[] = response.data.data.map((order: any) => ({
+      const fetchedOrders: Order[] = response.data.data.map((order: Order) => ({
         ...order,
-        recieptPdf: order.receiptPdf,
-        recieptImage: order.receiptImage,
+        receiptPdf: order?.receiptPdf,
+        receiptImage: order?.receiptImage,
       }));
       setOrders(fetchedOrders);
     } catch (error) {
-      toast.error('Failed to load orders.');
+      // Handle error appropriately, maybe show a toast or log it
+      const errorMessage = (error as AxiosErrorType).response?.data?.message || 'Failed to fetch orders.';
+      toast.error(errorMessage);
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
@@ -127,8 +129,10 @@ const OrdersPage = () => {
             : order
         )
       );
-    } catch (error: any) {
-      toast.error(error?.response?.message || 'Failed to confirm purchase. Please try again.');
+    } catch (error) {
+      // Handle error appropriately, maybe show a toast or log it
+      const errorMessage = (error as AxiosErrorType).response?.data?.message || 'Failed to confirm purchase.';
+      toast.error(errorMessage);
       console.error('Confirm purchase failed:', error);
     } finally {
       setActionLoading(null);
@@ -272,37 +276,37 @@ const OrdersPage = () => {
                             <h3 className="font-semibold">Receipt</h3>
                             <div className="grid grid-cols-2 gap-2">
                               <a
-                                href={order.recieptPdf || '#'}
+                                href={order.receiptPdf || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Button variant="outline" className="w-full" disabled={!order.recieptPdf}>
+                                <Button variant="outline" className="w-full" disabled={!order.receiptPdf}>
                                   <FileText className="w-4 h-4 mr-2" />
                                   Preview PDF
                                 </Button>
                               </a>
                               <a
-                                href={order.recieptImage || '#'}
+                                href={order.receiptImage || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Button variant="outline" className="w-full" disabled={!order.recieptImage}>
+                                <Button variant="outline" className="w-full" disabled={!order.receiptImage}>
                                   <ImageIcon className="w-4 h-4 mr-2" />
                                   Preview Image
                                 </Button>
                               </a>
                               <Button
-                                onClick={() => order.recieptPdf && handleDownload(order.recieptPdf, `receipt-${order.reference}.pdf`)}
+                                onClick={() => order.receiptPdf && handleDownload(order.receiptPdf, `receipt-${order.reference}.pdf`)}
                                 className="w-full"
-                                disabled={!order.recieptPdf}
+                                disabled={!order.receiptPdf}
                               >
                                 <Download className="w-4 h-4 mr-2" />
                                 Download PDF
                               </Button>
                               <Button
-                                onClick={() => order.recieptImage && handleDownload(order.recieptImage, `receipt-${order.reference}.jpg`)}
+                                onClick={() => order.receiptImage && handleDownload(order.receiptImage, `receipt-${order.reference}.jpg`)}
                                 className="w-full"
-                                disabled={!order.recieptImage}
+                                disabled={!order.receiptImage}
                               >
                                 <Download className="w-4 h-4 mr-2" />
                                 Download Image

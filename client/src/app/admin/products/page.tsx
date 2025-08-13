@@ -7,7 +7,6 @@ import {
     Pencil,
     Trash2,
     Menu,
-    ImageIcon,
     X,
     Loader2,
 } from 'lucide-react'
@@ -608,7 +607,7 @@ export default function ProductsPage() {
                                                                             <DialogHeader>
                                                                                 <DialogTitle>Edit: {editingProduct?.name}</DialogTitle>
                                                                                 <DialogDescription>
-                                                                                    Make changes to the product below. Click save when you're done.
+                                                                                    Make changes to the product below. Click save when you&apos;re done.
                                                                                 </DialogDescription>
                                                                             </DialogHeader>
 
