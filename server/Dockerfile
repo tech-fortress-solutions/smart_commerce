@@ -1,5 +1,5 @@
 # Backend Docker file
-FROM node:20.18.2-alpine3.19
+FROM node:20-alpine3.21
 
 # set working directory
 WORKDIR /app
