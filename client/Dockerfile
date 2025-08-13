@@ -1,5 +1,5 @@
 # Frontend build stage
-FROM node:20.18.2-alpine3.19 AS builder
+FROM node:20-alpine3.21 AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # run stage
-FROM node:20.18.2-alpine3.19
+FROM node:20-alpine3.21
 
 WORKDIR /app
 
