@@ -5,13 +5,13 @@ FROM node:20-alpine3.21
 WORKDIR /app
 
 # Copy package files
-COPY server/package*.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install --production
 
 # Copy backend source files
-COPY server/ ./
+COPY . .
 
 # Expose the port the app runs on
 EXPOSE 5000
