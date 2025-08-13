@@ -15,6 +15,7 @@ import Image from 'next/image'
 import api from '@/lib/axios'
 
 // --- Cart Item Component ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CartItem: FC<{ item: any }> = ({ item }) => {
   const { removeItem, updateQuantity } = useCart();
   return (
@@ -135,6 +136,7 @@ export default function Header() {
         }
         setCategories(data.data);
       } catch (error) {
+        console.error('Error fetching categories:', error);
         toast.error('Error fetching categories');
       }
     };

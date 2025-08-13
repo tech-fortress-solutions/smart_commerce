@@ -10,6 +10,7 @@ import {
   Tag,
   Star,
   Menu,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Sidebar from "@/components/Sidebar";
@@ -106,7 +107,6 @@ const ActionCard = ({ title, description, icon: Icon, href }: ActionCardProps) =
 export default function DashboardPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const router = useRouter();
 
   // State for fetching and calculated data for orders
   const [currentMonthRevenue, setCurrentMonthRevenue] = useState<number | null>(null);
@@ -135,7 +135,7 @@ export default function DashboardPage() {
         // Use Promise.all to fetch both orders and products concurrently
         const [ordersResponse, productsResponse] = await Promise.all([
           api.get("/admin/orders"),
-          api.get("http://localhost:5000/api/admin/product/all"),
+          api.get("/admin/product/all"),
         ]);
 
         if (ordersResponse.status !== 200 || productsResponse.status !== 200) {
@@ -239,6 +239,16 @@ export default function DashboardPage() {
     const sign = value >= 0 ? "+" : "";
     return `${sign}${value.toFixed(1)}%`;
   };
+
+  // Loading state if data is being fetched
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+        <span className="ml-2 text-lg text-muted-foreground">Loading...</span>
+      </div>
+    );
+  }
 
   const loadingText = "Loading...";
 

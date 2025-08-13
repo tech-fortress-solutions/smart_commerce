@@ -94,6 +94,7 @@ const ResetPasswordForm = () => {
         }, 1000);
       }
     } catch (error) {
+      console.error("Error resetting password:", error);
       toast.error("An error occurred while resetting your password.");
       setMessage("An error occurred while resetting your password.");
       setMessageType("error");

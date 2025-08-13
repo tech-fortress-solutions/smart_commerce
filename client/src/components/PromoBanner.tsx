@@ -3,6 +3,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface PromotionBannerProps {
   imageUrl: string;
@@ -48,11 +49,12 @@ const PromotionBanner: React.FC<PromotionBannerProps> = ({
       </div>
 
       {/* Image container - Placed second to appear on the right */}
-      <div className="w-1/3 flex justify-center items-center z-10">
-        <img
+      <div className="w-1/3 flex justify-center items-center max-h-24 md:max-h-36 z-10 relative">
+        <Image
+          fill
           src={imageUrl}
           alt={title}
-          className="max-h-24 md:max-h-36 object-contain"
+          className="object-contain"
         />
       </div>
 

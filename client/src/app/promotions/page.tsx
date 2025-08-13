@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { useCart } from '@/contexts/CartContext'
 import { BuyNowDialog } from '@/components/BuyNow'
+import { AxiosErrorType } from '@/types/error'
 
 
 // --- TYPE DEFINITIONS ---
@@ -224,9 +225,10 @@ const PromotionsPage = () => {
       
       setPromotions(filteredPromotions);
 
-    } catch (err: any) {
-      console.error("Failed to fetch promotions:", err);
-      if (err.response && err.response.status === 404) {
+    } catch (err) {
+      const errorObject = err as AxiosErrorType;
+      console.error("Failed to fetch promotions:", errorObject);
+      if (errorObject.response && errorObject.response.status === 404) {
         setNotFound(true);
       } else {
         setError("We couldn't load the promotions. Please try again later.");

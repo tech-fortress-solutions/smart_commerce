@@ -1,10 +1,10 @@
 "use client";
-
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import { Loader2 } from "lucide-react";
+import { AxiosErrorType } from "@/types/error";
+
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -19,10 +19,11 @@ export default function ForgotPasswordPage() {
         try {
           await api.post('/auth/user/password/forgot', { email });
           toast.success("If an account with that email exists, a password reset link has been sent.");
-        } catch (error: any) {
-          console.error("Forgot password error:", error);
-          toast.error(error?.response?.data?.message || "Failed to send password reset link");
-          setError(error?.response?.data?.message || "Failed to send password reset link");
+        } catch (error) {
+          const errorObject = error as AxiosErrorType;
+          console.error("Forgot password error:", errorObject);
+          toast.error(errorObject.response?.data?.message || "Failed to send password reset link");
+          setError(errorObject.response?.data?.message || "Failed to send password reset link");
         } finally {
           setLoading(false);
         }
@@ -56,7 +57,7 @@ export default function ForgotPasswordPage() {
               </div>
               <h3 className="tracking-tight text-2xl font-bold">Forgot Password?</h3>
               <p className="text-sm text-muted-foreground">
-                Enter your email address and we'll send you a link to reset your password
+                Enter your email address and we&apos;ll send you a link to reset your password
               </p>
             </div>
             <div className="p-6 pt-0">

@@ -16,6 +16,7 @@ import Sidebar from '@/components/Sidebar';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, Loader2 } from 'lucide-react'; // Import Loader2
 import { renderToString } from 'react-dom/server';
+import { PromotionFormData } from '@/types/promotion'; // Assuming this type is defined in your types folder
 
 // Mock data for images and colors using Tailwind CSS classes
 const defaultImages = [
@@ -61,7 +62,7 @@ const textColors = ['text-gray-800', 'text-white', 'text-black', 'text-red-600',
 
 const BannerEditorPage = () => {
   const router = useRouter();
-  const [promotionFormData, setPromotionFormData] = useState<any>(null);
+  const [promotionFormData, setPromotionFormData] = useState<PromotionFormData | null>(null);
   const [bannerProps, setBannerProps] = useState({
     title: '',
     description: '',

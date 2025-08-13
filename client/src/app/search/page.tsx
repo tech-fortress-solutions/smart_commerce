@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { useCart } from '@/contexts/CartContext'
 import { BuyNowDialog } from '@/components/BuyNow'
+import { AxiosErrorType } from '@/types/error'
 
 // --- TYPE DEFINITIONS ---
 type Product = {
@@ -218,9 +219,10 @@ export default function SearchPage() {
           setError(response.data.message || 'Failed to fetch search results.');
           toast.error(response.data.message || 'Failed to fetch search results.');
         }
-      } catch (err: any) {
+      } catch (err) {
+        const errorObject = err as AxiosErrorType;
         console.error('Search API error:', err);
-        if (err.response && err.response.status === 404) {
+        if (errorObject.response && errorObject.response.status === 404) {
           setIsNotFound(true);
         } else {
           setError('An unexpected error occurred while fetching products.');
@@ -250,7 +252,7 @@ export default function SearchPage() {
       <div className="container mx-auto px-4 py-8 sm:py-16">
         <ScrollAnimatedSection delay={0}>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Search Results for "{searchQuery}"</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Search Results for &quot;{searchQuery}&quot;</h1>
             <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
               {minPrice && <Badge variant="secondary">Min Price: ₦{minPrice}</Badge>}
               {maxPrice && <Badge variant="secondary">Max Price: ₦{maxPrice}</Badge>}

@@ -32,8 +32,9 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 // --- METADATA GENERATION (Corrected) ---
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const product = await getProduct(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const product = await getProduct(id);
 
   if (!product) {
     return {

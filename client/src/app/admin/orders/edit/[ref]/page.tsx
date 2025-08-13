@@ -1,5 +1,5 @@
 'use client';
-
+import { use } from 'react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -53,9 +53,10 @@ interface FormDataState {
   currency: 'NGN' | 'USD';
 }
 
-const EditOrderPage = ({ params }: { params: { ref: string } }) => {
+const EditOrderPage = ({ params }: { params: Promise<{ ref: string }> }) => {
   const router = useRouter();
-  const orderReference = params?.ref;
+  const { ref } = use(params);
+  const orderReference = ref;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [formData, setFormData] = useState<FormDataState | null>(null);
@@ -111,7 +112,7 @@ const EditOrderPage = ({ params }: { params: { ref: string } }) => {
       const newTotal = calculateTotal(formData.products);
       setFormData(prev => prev ? { ...prev, totalAmount: newTotal } : null);
     }
-  }, [formData?.products, calculateTotal]);
+  }, [formData, calculateTotal]);
 
   const handleClientNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;

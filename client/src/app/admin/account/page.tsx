@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth hook
+import { AxiosErrorType } from '@/types/error' // Import error types if needed
 
 // --- TYPE DEFINITIONS ---
 // Use the User type from AuthContext to ensure consistency
@@ -115,7 +116,7 @@ export default function AccountPage() {
         address: userData.address,
       };
 
-      const response = await api.put('/auth/user/account/update', payload);
+      await api.put('/auth/user/account/update', payload);
 
       // The backend response provides the updated user object. We should update the context state.
       // Assuming your AuthContext has a setUser function to do this.
@@ -124,9 +125,9 @@ export default function AccountPage() {
       // method to the AuthContext to seamlessly update the global state.
 
       toast.success('Account details updated successfully!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to update user:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to update account details.';
+      const errorMessage = (err as AxiosErrorType).response?.data?.message || 'Failed to update account details.';
       toast.error(errorMessage);
     } finally {
       setSubmitLoading(false);
@@ -156,9 +157,9 @@ export default function AccountPage() {
       await api.put('/auth/user/account/update', payload);
       toast.success('Password updated successfully!');
       setPasswordData({}); // Clear password fields
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to update password:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to update password. Please check your old password.';
+      const errorMessage = (err as AxiosErrorType).response?.data?.message || 'Failed to update account details.';
       toast.error(errorMessage);
     } finally {
       setSubmitLoading(false);

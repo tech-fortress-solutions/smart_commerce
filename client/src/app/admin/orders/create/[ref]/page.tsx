@@ -1,5 +1,5 @@
 'use client'
-
+import { use } from 'react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,11 @@ interface OrderFormState {
 }
 
 // The component now receives 'params' as a prop from the dynamic route
-export default function CreateOrderPage({ params }: { params: { ref: string } }) {
+export default function CreateOrderPage({ params }: { params: Promise<{ ref: string }> }) {
     const router = useRouter();
     // Safely access the dynamic route parameter using optional chaining
-    const orderReference = params?.ref;
+    const { ref } = use(params);
+    const orderReference = ref;
 
     const [formData, setFormData] = useState<OrderFormState | null>(null);
     const [loading, setLoading] = useState(true);
@@ -90,7 +91,7 @@ export default function CreateOrderPage({ params }: { params: { ref: string } })
             const newTotal = calculateTotal(formData.products);
             setFormData(prev => prev ? { ...prev, totalAmount: newTotal } : null);
         }
-    }, [formData?.products, calculateTotal]);
+    }, [formData, calculateTotal]);
 
     // Handle changes to a product's quantity or price
     const handleProductChange = (index: number, field: keyof Product, value: string | number) => {

@@ -17,6 +17,7 @@ import api from '@/lib/axios'
 import { useCart } from '@/contexts/CartContext'
 import { BuyNowDialog } from '@/components/BuyNow'
 import { use } from 'react';
+import { AxiosErrorType } from '@/types/error'
 
 
 // --- TYPE DEFINITIONS ---
@@ -214,9 +215,10 @@ const SinglePromotionPage = ({ params }: { params: Promise<{ id: string }> }) =>
     try {
       const response = await api.get(`/admin/promotion/${promotionId}`);
       setPromotion(response.data.data.promotion);
-    } catch (err: any) {
-      console.error("Failed to fetch promotion details:", err);
-      if (err.response && err.response.status === 404) {
+    } catch (err) {
+      const errorObject = err as AxiosErrorType;
+      console.error("Failed to fetch promotion details:", errorObject);
+      if (errorObject.response && errorObject.response.status === 404) {
         setError("This promotion could not be found.");
       } else {
         setError("We couldn't load the promotion details. Please try again later.");
