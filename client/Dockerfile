@@ -1,28 +1,23 @@
-# Frontend build stage
-FROM node:20-alpine3.21 AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm install
-
-COPY . .
-
-RUN npm run build
-
-# run stage
+# Runtime image (no build step)
 FROM node:20-alpine3.21
 
 WORKDIR /app
 
-COPY --from=builder /app/package*.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install only production dependencies
 RUN npm install --omit=dev
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+# Copy the already built files from host to container
+COPY .next ./.next
+COPY public ./public
+
+# Copy any other required files (like next.config.js, etc.)
+COPY next.config.* ./
+COPY .env ./.env
 
 EXPOSE 3000
 
-# start server
+# Start Next.js in production mode
 CMD ["npm", "start"]
