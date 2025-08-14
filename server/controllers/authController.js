@@ -511,9 +511,18 @@ const verifyAuthStatusController = async (req, res, next) => {
     }
 }
 
+
+// Test route always returns success
+const testRouteController = (req, res) => {
+    return res.status(200).json({
+        status: "success",
+        message: "Test route is working"
+    });
+};
+
 // export functions
 module.exports = {
     createUserController, loginUserController, logoutUserController, forgotPasswordController,
     resetPasswordController, updateUserAccountController, deleteUserAccountController, createAdminAccountController,
-    verifyAuthStatusController,
+    verifyAuthStatusController, testRouteController
 };
