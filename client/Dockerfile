@@ -1,7 +1,7 @@
 # Runtime image (no build step)
 FROM node:20-alpine3.21
 
-RUN apk add --no-cache wget
+RUN apk add --no-cache wget curl
 
 WORKDIR /app
 

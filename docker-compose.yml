@@ -47,7 +47,7 @@ services:
     # The healthcheck tells Docker to check if the frontend is ready.
     # It attempts to connect to the frontend's internal port.
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --timeout=2 http://localhost:3000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
