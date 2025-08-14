@@ -29,11 +29,6 @@ services:
     depends_on:
       - mongo
       - redis
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   frontend:
     build: ./client
@@ -43,13 +38,7 @@ services:
     expose:
       - "3000"
     depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - backend
 
   nginx:
     image: nginx:alpine
@@ -63,10 +52,8 @@ services:
       - ./certs:/etc/ssl/certs:ro
       - ./certs:/etc/ssl/private:ro
     depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
+      - frontend
+      - backend
 
 volumes:
   mongo_data:
