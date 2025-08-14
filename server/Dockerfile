@@ -1,6 +1,8 @@
 # Backend Docker file
 FROM node:20-alpine3.21
 
+RUN apk add --no-cache wget
+
 # set working directory
 WORKDIR /app
 
