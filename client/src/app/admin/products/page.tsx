@@ -148,7 +148,7 @@ export default function ProductsPage() {
                 api.get('/admin/product/all'),
                 api.get('/admin/category/all'),
             ])
-            console.log(categoriesRes.data.data)
+            console.log("category response: ", categoriesRes.data.data)
             setProducts(productsRes.data.data)
             setCategories(categoriesRes.data.data)
         } catch (err) {
