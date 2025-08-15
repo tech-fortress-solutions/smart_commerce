@@ -35,6 +35,6 @@ promotionSchema.set('toJSON', { virtuals: true });
 promotionSchema.set('toObject', { virtuals: true });
 
 // Create a model from the schema
-const Promotion = mongoose.model('Promotion', promotionSchema);
+const Promotion = mongoose.model('Promotion', promotionSchema, 'promotions');
 // Export the model
 module.exports = Promotion;
