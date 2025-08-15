@@ -57,7 +57,7 @@ productSchema.set('toJSON', { virtuals: true });
 productSchema.set('toObject', { virtuals: true  });
 
 // Create a model from the schema
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', productSchema, 'products');
 
 // Export the model
 module.exports = Product;

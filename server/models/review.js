@@ -30,6 +30,6 @@ reviewSchema.virtual('reviewerName').get(function () {
 
 
 // Create a model from the schema
-const Review = mongoose.model('Review', reviewSchema);
+const Review = mongoose.model('Review', reviewSchema, 'reviews');
 // Export the model
 module.exports = Review;

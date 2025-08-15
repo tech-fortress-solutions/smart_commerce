@@ -22,6 +22,6 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Create a model from the schema
-const Order = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', orderSchema, 'orders');
 // Export the model
 module.exports = Order;

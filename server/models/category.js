@@ -22,7 +22,7 @@ categorySchema.set('toObject', { virtuals: true });
 categorySchema.set('toJSON', { virtuals: true });
 
 // Create a model from the schema
-const Category = mongoose.model('Category', categorySchema);
+const Category = mongoose.model('Category', categorySchema, 'categories');
 
 // Export the model
 module.exports = Category;
