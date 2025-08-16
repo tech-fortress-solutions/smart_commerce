@@ -191,8 +191,8 @@ const getUserReviewsService = async (userId) => {
 
         // Get reviews by user ID
         const reviews = await Review.find({ user: userId }).populate('product', 'name category thumbnail').populate('user', 'firstname lastname');
-        if (!reviews) {
-            throw new AppError('No reviews found for this user', 404);
+        if (!reviews || reviews.length === 0) {
+            return [];
         }
         return reviews;
     } catch (error) {

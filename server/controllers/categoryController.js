@@ -69,7 +69,11 @@ const getAllCategoriesController = async (req, res, next) => {
         // Get all categories using the service
         const categories = await getAllCategoriesService();
         if (!categories || categories.length === 0) {
-            return next(new AppError('No categories found', 404));
+            return res.status(200).json({
+                status: 'success',
+                message: 'No categories found',
+                data: []
+            });
         }
 
         // Return response with the list of categories

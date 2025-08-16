@@ -108,8 +108,12 @@ const getProductReviewsController = async (req, res, next) => {
 
         // Get reviews by product ID using service
         const reviews = await getReviewsByProductService(productId);
-        if (!reviews) {
-            return next(new AppError('No reviews found for this product', 404));
+        if (!reviews || reviews.length === 0) {
+            return res.status(200).json({
+                status: 'success',
+                message: 'No reviews found for this product',
+                data: []
+            });
         }
         // Return response with the list of reviews
         res.status(200).json({
@@ -276,6 +280,7 @@ const getAllReviewsController = async (req, res, next) => {
             // Return empty array if no reviews found
             return res.status(200).json({
                 status: 'success',
+                message: 'No reviews found',
                 data: []
             });
         }
@@ -299,11 +304,7 @@ const getUserReviewsController = async (req, res, next) => {
 
         // Get user's reviews using service
         const reviews = await getUserReviewsService(user._id);
-        if (!reviews) {
-            return next(new AppError('No reviews found for this user', 404));
-        }
-
-        if (reviews.length === 0) {
+        if (!reviews || reviews.length === 0) {
             return res.status(200).json({
                 status: 'success',
                 message: 'No reviews found for this user',

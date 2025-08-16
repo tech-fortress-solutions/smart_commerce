@@ -100,7 +100,11 @@ const getAllProductsController = async (req, res, next) => {
         // get all products using the service
         const products = await getAllProductsService();
         if (!products || products.length === 0) {
-            return next(new AppError('No products found', 404));
+            return res.status(200).json({
+                status: 'success',
+                message: 'No products found',
+                data: []
+            });
         }
         // Return response with the list of products
         res.status(200).json({
@@ -129,7 +133,11 @@ const getProductsByCategoryController = async (req, res, next) => {
         // get products by category using service
         const products = await getProductsByCategoryService(categoryId);
         if (!products || products.length === 0) {
-            return next(new AppError("No Products Found for this category", 404));
+            return res.status(200).json({
+                status: 'success',
+                message: 'No products found for this category',
+                data: []
+            });
         }
         // Return response with the list of products
         res.status(200).json({
@@ -414,7 +422,11 @@ const searchProductsController = async (req, res, next) => {
         // Search products using service
         const products = await searchProductsService(filter, sort);
         if (!products || products.length === 0) {
-            return next(new AppError('No products found matching the criteria', 404));
+            return res.status(200).json({
+                status: 'success',
+                message: 'No products found matching the criteria',
+                data: []
+            });
         }
         // Return response with the list of products
         res.status(200).json({

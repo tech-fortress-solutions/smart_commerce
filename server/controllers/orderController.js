@@ -171,7 +171,11 @@ const getAllOrdersController = async (req, res, next) => {
     try {
         const orders = await getAllOrdersService();
         if (!orders || orders.length === 0) {
-            throw new AppError('No orders found', 404);
+            return res.status(200).json({
+                status: 'success',
+                message: 'No orders found',
+                data: []
+            });
         }
         res.status(200).json({
             status: 'success',
@@ -429,11 +433,8 @@ const getUserOrdersController = async (req, res, next) => {
 
         // get user orders from database
         const orders = await getUserOrdersService(user._id);
-        if (!orders) {
-            return next(new AppError('No orders found for this user', 404));
-        }
 
-        if (orders.length === 0) {
+        if (!orders || orders.length === 0) {
             return res.status(200).json({
                 status: 'success',
                 message: 'No orders found for this user',

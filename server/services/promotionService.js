@@ -32,9 +32,8 @@ const getActivePromotionService = async () => {
         // Get the latest active promotion
         const activePromotion = await Promotion.find({ active: true }).sort({ createdAt: -1 })
             .populate('products.product', 'thumbnail name currency description category images totalRating numReviews');
-        
-        if (!activePromotion) {
-            throw new AppError('No active promotion found', 404);
+        if (!activePromotion || activePromotion.length === 0) {
+            return [];
         }
 
         return activePromotion;
@@ -135,7 +134,7 @@ const getExpiredPromotionsService = async () => {
             .populate('products.product', 'thumbnail name currency description category images totalRating numReviews')
             .sort({ endDate: -1 });
         if (!expiredPromotions || expiredPromotions.length === 0) {
-            throw new AppError('No expired promotions found', 404);
+            return [];
         }
         return expiredPromotions;
     } catch (error) {
