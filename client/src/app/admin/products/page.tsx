@@ -148,7 +148,6 @@ export default function ProductsPage() {
                 api.get('/admin/product/all'),
                 api.get('/admin/category/all'),
             ])
-            console.log("category response: ", categoriesRes.data.data)
             setProducts(productsRes.data.data)
             setCategories(categoriesRes.data.data)
         } catch (err) {
@@ -156,7 +155,6 @@ export default function ProductsPage() {
             setError('Failed to load data. Please refresh the page.')
             toast.error('Failed to load data.')
         } finally {
-            console.log("categories: ", categories)
             setLoading(false)
         }
     }, [])
