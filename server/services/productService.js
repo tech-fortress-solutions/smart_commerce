@@ -79,7 +79,7 @@ const getProductsByCategoryService = async (categoryId) => {
         // get products by categoryid
         const products = await Product.find({ category: categoryId }).populate('category', 'name _id');
         if (!products || products.length === 0) {
-            throw new AppError("No Products Found for this category", 404);
+            return [];
         }
         return products;
     } catch (error) {
@@ -98,7 +98,7 @@ const getAllProductsService = async () => {
         // get all products
         const products = await Product.find({}).populate('category', 'name _id');
         if (!products || products.length === 0) {
-            throw new AppError("No Products Found", 404);
+            return [];
         }
         return products;
     } catch (error) {
@@ -206,13 +206,13 @@ const searchProductsService = async (filter, sort) => {
         if (!sort) {
             const products = await Product.find(filter).populate('category', 'name _id');
             if (!products || products.length === 0) {
-                throw new AppError('No products found matching the criteria', 404);
+                return [];
             }
             return products;
         } else {
             const products = await Product.find(filter).sort(sort).populate('category', 'name _id');
             if (!products || products.length === 0) {
-                throw new AppError('No products found matching the criteria', 404);
+                return [];
             }
             return products;
         }

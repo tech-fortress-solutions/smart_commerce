@@ -122,8 +122,12 @@ const getActivePromotionController = async (req, res, next) => {
    try {
       // Get active promotion using service
       const activePromotion = await getActivePromotionService();
-      if (!activePromotion) {
-         return next(new AppError('No active promotion found', 404));
+      if (!activePromotion || activePromotion.length === 0) {
+         return res.status(200).json({
+            status: 'success',
+            message: 'No active promotions found',
+            data: []
+         });
       }
       // convert active promotions to objects
       const activePromotions = activePromotion.map(promo => promo.toObject());

@@ -81,7 +81,7 @@ const getAllOrdersService = async () => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
         if (!orders || orders.length === 0) {
-            throw new AppError('No orders found', 404);
+            return []; // Return empty array if no orders found
         }
         return orders;
     } catch (error) {
@@ -218,7 +218,7 @@ const getUserOrdersService = async (userId) => {
         // find orders by user ID
         const orders = await Order.find({ clientId: userId }).sort({ createdAt: -1 });
         if (!orders) {
-            throw new AppError('No orders found for this user', 404);
+            return []; // Return empty array if no orders found
         }
         return orders;
     } catch (error) {
