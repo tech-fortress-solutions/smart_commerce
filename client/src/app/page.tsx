@@ -375,9 +375,11 @@ const ProductsByCategories = ({ products, categories }: { products: Product[], c
                             <h2 className="text-3xl font-bold">{category.name}</h2>
                             <p className="text-muted-foreground mt-1">{category.description}</p>
                         </div>
-                        <Button variant="link" className="text-primary hover:text-primary/80 transition-colors p-0 h-auto mt-2 sm:mt-0">
-                            View All <ChevronRight className="ml-1 h-4 w-4" />
-                        </Button>
+                        <Link href={`/categories/${category._id}`} className="hidden sm:block">
+                            <Button variant="link" className="text-primary hover:text-primary/80 transition-colors p-0 h-auto mt-2 sm:mt-0">
+                                View All <ChevronRight className="ml-1 h-4 w-4" />
+                            </Button>
+                        </Link>
                     </div>
                 </ScrollAnimatedSection>
                 <CardGridWithAnimation className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
