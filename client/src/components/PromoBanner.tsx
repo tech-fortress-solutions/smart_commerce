@@ -50,12 +50,14 @@ const PromotionBanner: React.FC<PromotionBannerProps> = ({
 
       {/* Image container - Placed second to appear on the right */}
       <div className="w-1/3 flex justify-center items-center max-h-24 md:max-h-36 z-10 relative">
-        <Image
-          fill
-          src={imageUrl}
-          alt={title}
-          className="object-contain"
-        />
+        <div className="relative w-full h-full">
+          <Image
+            fill
+            src={imageUrl}
+            alt={title}
+            className="object-contain"
+          />
+        </div>
       </div>
 
       {/* Overlay/Gradient */}
