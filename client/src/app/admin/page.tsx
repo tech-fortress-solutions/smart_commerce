@@ -24,6 +24,7 @@ interface Order {
   _id: string;
   totalAmount: number;
   createdAt: string;
+  status: string;
 }
 
 // Define a type for the product data
@@ -145,6 +146,9 @@ export default function DashboardPage() {
         const allOrders: Order[] = ordersResponse.data.data;
         const allProducts: Product[] = productsResponse.data.data;
 
+        // Filter out pending orders
+        const paidOrders = allOrders.filter(order => order.status === "paid");
+
         // Get dates for the current and previous month
         const now = new Date();
         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -152,12 +156,12 @@ export default function DashboardPage() {
         const endOfLastMonth = startOfCurrentMonth;
 
         // === Process Order Data ===
-        const ordersCurrentMonth = allOrders.filter(order => {
+        const ordersCurrentMonth = paidOrders.filter(order => {
           const orderDate = new Date(order.createdAt);
           return orderDate >= startOfCurrentMonth && orderDate < now;
         });
 
-        const ordersLastMonth = allOrders.filter(order => {
+        const ordersLastMonth = paidOrders.filter(order => {
           const orderDate = new Date(order.createdAt);
           return orderDate >= startOfLastMonth && orderDate < endOfLastMonth;
         });
