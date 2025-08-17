@@ -49,13 +49,14 @@ const PromotionBanner: React.FC<PromotionBannerProps> = ({
       </div>
 
       {/* Image container - Placed second to appear on the right */}
-      <div className="w-1/3 flex justify-center items-center max-h-24 md:max-h-36 z-10 relative">
-        <div className="relative w-full h-full">
+      <div className="w-1/3 flex justify-center items-center max-h-24 md:max-h-36 z-10">
+        <div className="w-full h-32 relative" >
           <Image
             fill
             src={imageUrl}
             alt={title}
             className="object-contain"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
         </div>
       </div>
