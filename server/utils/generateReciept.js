@@ -166,7 +166,10 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
       formattedTotalAmount,
     });
 
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: 'new' });
+    const browser = await puppeteer.launch({ 
+      args: ['--no-sandbox'], headless: 'new',
+      executablePath: '/usr/bin/chromium-browser'
+    });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
 
