@@ -88,7 +88,7 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
       color: #444;
     }
     .brand-logo {
-      max-height: 60px;
+      max-height: 80px;
       max-width: 120px;
       object-fit: contain;
     }
@@ -167,7 +167,8 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
     });
 
     const browser = await puppeteer.launch({ 
-      args: ['--no-sandbox'], headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'], 
+      headless: 'new',
       executablePath: '/usr/bin/chromium-browser'
     });
     const page = await browser.newPage();
