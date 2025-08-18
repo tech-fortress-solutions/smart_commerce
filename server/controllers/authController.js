@@ -8,6 +8,9 @@ const { hashPassword, verifyPassword } = require('../utils/hashPassword');
 const { createJwtToken, verifyJwtToken } = require('../utils/jwtAuth');
 const { generateResetPasswordTemplate } = require('../templates/resetPassword');
 const { addEmailJob } = require('../jobs/email/queue');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 
 // create user controller
@@ -64,7 +67,7 @@ const createUserController = async (req, res, next) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'None',
+            sameSite: 'none',
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
@@ -127,7 +130,7 @@ const loginUserController = async (req, res, next) => {
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'None', // Prevent CSRF attacks
+            sameSite: 'none', // Prevent CSRF attacks
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
         return res.status(200).json({
@@ -162,7 +165,7 @@ const logoutUserController = async (req, res, next) => {
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'Strict' // Prevent CSRF attacks
+            sameSite: 'none' // Prevent CSRF attacks
         });
 
         // revoke the token in Redis cache
