@@ -35,6 +35,17 @@ services:
       timeout: 5s
       retries: 5
 
+  # Background worker container for processing jobs
+  worker:
+    build: ./server
+    container_name: worker
+    restart: always
+    env_file: ./server/.env
+    command: ["node", "jobs/index.js"]
+    depends_on:
+      - mongo
+      - redis
+
   frontend:
     build: ./client
     container_name: frontend

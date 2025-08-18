@@ -23,7 +23,7 @@ const app = express();
 app.use(cookieParser());
 app.use(cors(
     {
-        origin: process.env.FRONTEND_URL,
+        origin: [process.env.FRONTEND_URL, process.env.ORIGIN2, process.env.ORIGIN3],
         credentials: true, // Allow cookies to be sent with requests
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
