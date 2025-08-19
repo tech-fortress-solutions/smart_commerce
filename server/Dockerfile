@@ -12,6 +12,7 @@ RUN apk add --no-cache \
     glib \
     cairo \
     pango \
+    fontconfig \
     ttf-freefont \
     libstdc++ \
     libgcc \
@@ -24,18 +25,12 @@ RUN apk add --no-cache \
     libxi \
     libxrandr \
     libxrender \
-    libxss \
     libxtst \
     libuv \
     libusb \
     dbus \
     expat \
     eudev-libs \
-    gconf-libs \
-    atk \
-    at-spi2-atk \
-    at-spi2-core \
-    gtk+3.0 \
     wget \
     && rm -rf /var/cache/apk/*
 
