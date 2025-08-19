@@ -1,8 +1,6 @@
 # Backend Docker file
 FROM node:20-alpine3.21
 
-RUN apk add --no-cache wget
-
 # Install required dependencies for Puppeteer.
 # These packages are the Alpine equivalents of the ones needed on Debian/Ubuntu.
 RUN apk add --no-cache \
@@ -14,6 +12,31 @@ RUN apk add --no-cache \
     glib \
     cairo \
     pango \
+    ttf-freefont \
+    libstdc++ \
+    libgcc \
+    libx11 \
+    libxcomposite \
+    libxcursor \
+    libxdamage \
+    libxext \
+    libxfixes \
+    libxi \
+    libxrandr \
+    libxrender \
+    libxss \
+    libxtst \
+    libuv \
+    libusb \
+    dbus \
+    expat \
+    eudev-libs \
+    gconf-libs \
+    atk \
+    at-spi2-atk \
+    at-spi2-core \
+    gtk+3.0 \
+    wget \
     && rm -rf /var/cache/apk/*
 
 # set working directory
