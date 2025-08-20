@@ -33,7 +33,6 @@ services:
     env_file: ./server/.env
     command: ["node", "jobs/index.js"]
     depends_on:
-      - mongo
       - redis
 
   nginx:
