@@ -4,28 +4,35 @@ FROM node:20-alpine AS builder
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json and package-lock.json to the builder stage
 COPY package*.json ./
 
-# Install all dependencies, including devDependencies
-RUN npm install
+# Install project dependencies
+# We will not install them here to avoid the cross-platform issue.
+# We will do it in the final stage instead.
 
 # Copy the rest of the application source code
 COPY . .
-
-# Build the application (if applicable, e.g., for TypeScript)
-# RUN npm run build
 
 # ---
 
 # Stage 2: The Production Stage
 FROM ghcr.io/puppeteer/puppeteer:21.6.0
 
-# Set the working directory
+# Switch to the root user to install packages
+USER root
+
+# Set working directory
 WORKDIR /app
 
-# Copy only the necessary files from the 'builder' stage
+# Copy the application source code
 COPY --from=builder /app ./
+
+# Install Node.js dependencies in the final image
+RUN npm install
+
+# Switch back to the non-root user for security
+USER pptruser
 
 # Expose the port the app runs on
 EXPOSE 5000
