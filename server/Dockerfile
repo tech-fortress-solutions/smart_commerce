@@ -1,19 +1,31 @@
-# Use the official Puppeteer-specific base image, which includes a stable
-# version of Node.js and all required dependencies for headless Chrome.
-FROM ghcr.io/puppeteer/puppeteer:21.6.0
+# Stage 1: The Build Stage
+FROM node:20-alpine AS builder
 
-# Set working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json to the work directory
-# This allows Docker to cache the npm install layer
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install project dependencies
-RUN npm install --omit=dev
+# Install all dependencies, including devDependencies
+RUN npm install
 
 # Copy the rest of the application source code
 COPY . .
+
+# Build the application (if applicable, e.g., for TypeScript)
+# RUN npm run build
+
+# ---
+
+# Stage 2: The Production Stage
+FROM ghcr.io/puppeteer/puppeteer:21.6.0
+
+# Set the working directory
+WORKDIR /app
+
+# Copy only the necessary files from the 'builder' stage
+COPY --from=builder /app ./
 
 # Expose the port the app runs on
 EXPOSE 5000
