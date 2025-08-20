@@ -7,6 +7,7 @@ const { stageOrderService, retrieveOrderService, createOrderService, getAllOrder
 const { sanitize, buildWhatsAppMessage } = require('../utils/helper');
 const { generateReceiptFiles } = require('../utils/generateReciept');
 const { deleteImageService } = require('../services/uploadService');
+const { addCreateRecieptJob } = require('../jobs/createReciepts/queue');
 
 
 // stage order controller
@@ -268,30 +269,18 @@ const confirmPurchaseController = async (req, res, next) => {
             whatsapp: process.env.ADMIN_PHONE || '+1234567890',
             website: process.env.BRAND_WEBSITE || 'https://example.com',
         };
-        // generate receipt files
-        const recieptUrls = await generateReceiptFiles(order.toObject(), brandInfo);
-        if (!recieptUrls || !recieptUrls.pdfUrl || !recieptUrls.jpgUrl) {
-            return next(new AppError("Failed to generate receipt", 500));
-        }
-        // update order with receipt URLs
-        const updatedOrder = await updateOrderService(reference, {
-            receiptPdf: recieptUrls.pdfUrl,
-            receiptImage: recieptUrls.jpgUrl,
+        // add generate receipt job to queue
+        await addCreateRecieptJob({
+            orderData: order.toObject(), // Convert Mongoose document to plain object
+            brandInfo,
         });
-        if (!updatedOrder) {
-            return next(new AppError("Failed to update order with receipt URLs", 500));
-        }
 
         //return response with order and receipt URLs
         res.status(200).json({
             status: 'success',
-            message: 'Order confirmed and receipt generated successfully',
+            message: 'Order confirmed and receipt is being generated, check back later in 5 minutes for the receipt',
             data: {
                 order,
-                receipt: {
-                    pdfUrl: recieptUrls.pdfUrl,
-                    jpgUrl: recieptUrls.jpgUrl,
-                },
             },
         });
     } catch (error) {
