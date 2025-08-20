@@ -21,6 +21,9 @@ COPY . .
 # Stage 2: The Production Stage
 FROM ghcr.io/puppeteer/puppeteer:21.6.0
 
+# Install wget in the final image for the health check
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory
 WORKDIR /app
 
