@@ -20,7 +20,7 @@ services:
     # The healthcheck tells Docker to check if the backend is ready.
     # It attempts to connect to the backend's internal port.
     healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
+      test: ["CMD", "node", "healthCheck.js"]
       interval: 10s
       timeout: 5s
       retries: 5
