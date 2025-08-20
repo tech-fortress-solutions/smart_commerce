@@ -20,7 +20,7 @@ services:
     # The healthcheck tells Docker to check if the backend is ready.
     # It attempts to connect to the backend's internal port.
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --timeout=1 http://localhost:5000/api/user/test || exit 1"]
+      test: ["CMD", "node", "healthcheck.js"]
       interval: 10s
       timeout: 5s
       retries: 5
