@@ -13,7 +13,7 @@ const createReceiptWorker = new Worker('createReciept', async (job) => {
         // Call the generateReceipt function to create the receipt
         const receiptUrls = await generateReceiptFiles(orderData, brandInfo);
         // Update the order with the receipt URLs
-        const updatedOrder = await updateOrderService(orderData._id, {
+        const updatedOrder = await updateOrderService(orderData.reference, {
             receiptPdf: receiptUrls.pdfUrl,
             receiptImage: receiptUrls.jpgUrl,
         });
