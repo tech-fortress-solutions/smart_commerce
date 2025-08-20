@@ -21,14 +21,8 @@ COPY . .
 # Stage 2: The Production Stage
 FROM ghcr.io/puppeteer/puppeteer:21.6.0
 
-# Switch to the root user to install packages
-USER root
-
 # Install wget in the final image for the health check
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
-
-# Switch back to the non-root user for security
-USER pptruser
+RUN apt-get install -y wget
 
 # Set the working directory
 WORKDIR /app
