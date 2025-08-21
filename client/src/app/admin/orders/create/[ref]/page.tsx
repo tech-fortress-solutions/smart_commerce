@@ -9,6 +9,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute'; // Assuming this component exists
 import api from '@/lib/axios'; // Assuming this is your configured axios instance
+import { set } from 'date-fns';
 
 // Define the data structures for type safety
 interface Product {
@@ -137,14 +138,16 @@ export default function CreateOrderPage({ params }: { params: Promise<{ ref: str
             if (response.data.status === 'success') {
                 toast.success('Order created successfully!');
                 // Redirect or perform other actions after success
-                router.push('/admin/orders'); // Redirect to orders list
+                setTimeout(() => {
+                    router.push('/admin/orders');
+                }, 100);
             } else {
                 toast.error(response.data.message || 'Failed to create order.');
+                setIsSubmitting(false);
             }
         } catch (error) {
             console.error("Failed to create order:", error);
             toast.error('An error occurred. Please try again.');
-        } finally {
             setIsSubmitting(false);
         }
     };
