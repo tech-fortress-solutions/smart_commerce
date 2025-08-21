@@ -168,7 +168,8 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
 
     const browser = await puppeteer.launch({ 
       headless: "new",
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], 
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+      timeout: 60000, // 60 seconds 
     });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
