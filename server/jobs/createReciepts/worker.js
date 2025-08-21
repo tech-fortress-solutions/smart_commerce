@@ -26,7 +26,7 @@ const createReceiptWorker = new Worker('createReciept', async (job) => {
         // Handle the error, you can rethrow it to retry the job
         throw new AppError('Failed to process create receipt job', 500);
     }
-}, { connection: redisClient });
+}, { connection: redisClient, concurrency: 1 });
 
 // Listen for worker errors
 createReceiptWorker.on('failed', (job, err) => {
