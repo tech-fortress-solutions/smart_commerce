@@ -139,14 +139,13 @@ export default function CreateOrderPage({ params }: { params: Promise<{ ref: str
                 toast.success('Order created successfully!');
                 // Redirect or perform other actions after success
                 router.push('/admin/orders');
-                return;
             } else {
                 toast.error(response.data.message || 'Failed to create order.');
-                setIsSubmitting(false);
             }
         } catch (error) {
             console.error("Failed to create order:", error);
             toast.error('An error occurred. Please try again.');
+        } finally {
             setIsSubmitting(false);
         }
     };
