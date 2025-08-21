@@ -278,7 +278,7 @@ const confirmPurchaseController = async (req, res, next) => {
         //return response with order and receipt URLs
         res.status(200).json({
             status: 'success',
-            message: 'Order confirmed and receipt is being generated, check back later in 5 minutes for the receipt',
+            message: 'Order confirmed and receipt is being generated, check back later in 5 minutes for the receipts',
             data: {
                 order,
             },
