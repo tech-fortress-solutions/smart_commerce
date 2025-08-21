@@ -107,7 +107,7 @@ const uploadPdfService = async (file) => {
         await s3Client.send(command);
 
         // Return the minio URL of the uploaded PDF
-        const pdfUrl = `${process.env.S3_ENDPOINT}/${process.env.S3_BUCKET}/${fileKey}`;
+        const pdfUrl = `${process.env.S3_CDN_URL}/${fileKey}`;
         return pdfUrl;
     } catch (error) {
         if (error instanceof AppError) {
