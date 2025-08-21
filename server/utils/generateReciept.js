@@ -5,8 +5,12 @@ const { uploadImageService, uploadPdfService } = require('../services/uploadServ
 const { formatAmount } = require('./helper');
 
 handlebars.registerHelper('multiply', (a, b) => a * b);
+handlebars.registerHelper('inc', function (value) {
+      return parseInt(value) + 1;
+});
 
 const generateReceiptFiles = async (orderData, brandInfo) => {
+  let browser = null;
   try {
     const formattedDate = format(new Date(orderData.paidAt), 'dd/MM/yyyy HH:mm:ss');
     const formattedTotalAmount = formatAmount(orderData.totalAmount, orderData.currency);
@@ -153,11 +157,6 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
 </html>
     `;
 
-    // register a helper to increment @index by 1 (so it's 1-based)
-    handlebars.registerHelper('inc', function (value) {
-      return parseInt(value) + 1;
-    });
-
     const template = handlebars.compile(htmlTemplate);
     const html = template({
       ...orderData,
@@ -166,7 +165,7 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
       formattedTotalAmount,
     });
 
-    const browser = await puppeteer.launch({ 
+    browser = await puppeteer.launch({ 
       headless: "new",
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
       timeout: 60000, // 60 seconds 
@@ -176,7 +175,6 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
 
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
     const screenshotBuffer = await page.screenshot({ fullPage: true });
-    await browser.close();
 
     const pdfFile = {
       buffer: pdfBuffer,
@@ -199,6 +197,10 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
   } catch (error) {
     console.error('Failed to generate receipt:', error);
     throw new Error('Receipt generation failed');
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };
 
