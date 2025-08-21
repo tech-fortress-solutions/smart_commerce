@@ -19,20 +19,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("http://localhost:3000"),
-  title: "Smart Commerce",
+  metadataBase: new URL("https://smartcommerce-sable.vercel.app"),
+  title: "Shop Hub",
   description: "New generation e-commerce platform built for speed and scalability.",
   icons: {
-    icon: "/globe.svg",
+    icon: "/shophub.png",
   },
   openGraph: {
-    title: "Smart Commerce",
+    title: "Shop Hub",
     description: "New generation e-commerce platform built for speed and scalability.",
-    url: "http://localhost:3000",
+    url: "https://smartcommerce-sable.vercel.app",
     siteName: "Smart Commerce",
     images: [
       {
-        url: "/og-image.png",
+        url: "/shophup.png",
         width: 1200,
         height: 630,
         alt: "Smart Commerce OG Image",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Smart Commerce",
     description: "New generation e-commerce platform built for speed and scalability.",
-    images: ["/og-image.png"],
+    images: ["/shophub.png"],
   },
 };
 

@@ -60,7 +60,6 @@ type Order = {
   createdAt: string;
   updatedAt: string;
   paidAt?: string;
-  // Use a different name like recieptPdfUrl to avoid confusion
   receiptPdf?: string;
   receiptImage?: string;
 };
@@ -70,10 +69,6 @@ type PaidOrderResponse = {
   message: string;
   data: {
     order: Order;
-    receipt: {
-      pdfUrl: string;
-      jpgUrl: string;
-    };
   };
 };
 
@@ -92,8 +87,6 @@ const OrdersPage = () => {
       // Update this to correctly map the receipt data from the API to the Order type
       const fetchedOrders: Order[] = response.data.data.map((order: Order) => ({
         ...order,
-        receiptPdf: order?.receiptPdf,
-        receiptImage: order?.receiptImage,
       }));
       setOrders(fetchedOrders);
     } catch (error) {
@@ -123,8 +116,6 @@ const OrdersPage = () => {
             ? {
                 ...order,
                 ...response.data.data.order,
-                recieptPdf: response.data.data.receipt.pdfUrl,
-                recieptImage: response.data.data.receipt.jpgUrl,
               }
             : order
         )
