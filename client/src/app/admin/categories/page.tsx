@@ -554,7 +554,7 @@ export default function CategoriesPage() {
                                       <AlertDialogHeader>
                                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                          This action cannot be undone. This will permanently delete the category &quot;<span className="font-semibold text-foreground">{category.name}</span>&quot; and remove its data from our servers.
+                                          This action cannot be undone. This will permanently delete the category &quot;<span className="font-semibold text-foreground">{category.name}</span>&quot; and delete all products under this category from our servers&#44; please do ensure that no product in this category is in any promotion as this would cause unexpected issues on your website.
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
