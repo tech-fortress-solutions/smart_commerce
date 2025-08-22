@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "Smart Commerce",
     images: [
       {
-        url: "/shophup.png",
+        url: "/shophub.png",
         width: 1200,
         height: 630,
         alt: "Smart Commerce OG Image",
