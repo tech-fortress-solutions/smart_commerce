@@ -108,6 +108,7 @@ const generateReceiptFiles = async (orderData, brandInfo) => {
     <p>Purchase Date: {{formattedDate}}</p>
     <p>Reference: {{reference}}</p>
     <p>Client: {{clientName}}</p>
+    <p>Delivery Location: {{location}}</p>
 
     <h3>Items Purchased</h3>
     <table class="table">

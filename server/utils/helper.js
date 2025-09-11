@@ -46,9 +46,9 @@ const formatAmount = (amount, currency = 'NGN') => {
 
 
 // whatsapp message builder for orders with a link shortener
-const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, currency }) => {
+const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, location, currency }) => {
   // Validate input
-  if (!clientName || !products || !totalAmount || !reference || !currency) {
+  if (!clientName || !products || !totalAmount || !reference || !location || !currency) {
     throw new AppError('Invalid order data for WhatsApp message', 400);
   }
 
@@ -67,6 +67,7 @@ const buildWhatsAppMessage = ({ clientName, products, totalAmount, reference, cu
   Client Name: ${clientName}
   Reference: ${reference}
   Total Amount: ${formattedTotalAmount}
+  Delivery Location: ${location}
   Products: ${formattedProducts}${additionalProductsMessage}
   [For Vendor Use Only] Click the link to create the order: ${baseUrl}/admin/orders/create/${reference}`;
 

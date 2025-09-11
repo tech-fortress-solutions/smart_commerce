@@ -20,6 +20,7 @@ import {
   Download,
   Edit,
   Trash,
+  Truck, // Import the Truck icon for the delivery button
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -49,13 +50,15 @@ type Product = {
   _id: string;
 };
 
+// **MODIFICATION 1: Add 'location' and 'delivered' status**
 type Order = {
   _id: string;
   clientName: string;
+  location?: string; // Add optional location field
   products: Product[];
   totalAmount: number;
   reference: string;
-  status: 'pending' | 'paid';
+  status: 'pending' | 'paid' | 'delivered'; // Add 'delivered' status
   currency: 'NGN' | 'USD';
   createdAt: string;
   updatedAt: string;
@@ -84,14 +87,14 @@ const OrdersPage = () => {
     setLoading(true);
     try {
       const response = await api.get('/admin/orders');
-      // Update this to correctly map the receipt data from the API to the Order type
       const fetchedOrders: Order[] = response.data.data.map((order: Order) => ({
         ...order,
       }));
       setOrders(fetchedOrders);
     } catch (error) {
-      // Handle error appropriately, maybe show a toast or log it
-      const errorMessage = (error as AxiosErrorType).response?.data?.message || 'Failed to fetch orders.';
+      const errorMessage =
+        (error as AxiosErrorType).response?.data?.message ||
+        'Failed to fetch orders.';
       toast.error(errorMessage);
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -107,7 +110,7 @@ const OrdersPage = () => {
     setActionLoading(reference);
     try {
       const response = await api.put<PaidOrderResponse>(
-        `/admin/orders/confirm/${reference}`
+        `/admin/orders/confirm/${reference}`,
       );
       toast.success(response.data.message);
       setOrders((prevOrders) =>
@@ -117,14 +120,41 @@ const OrdersPage = () => {
                 ...order,
                 ...response.data.data.order,
               }
-            : order
-        )
+            : order,
+        ),
       );
     } catch (error) {
-      // Handle error appropriately, maybe show a toast or log it
-      const errorMessage = (error as AxiosErrorType).response?.data?.message || 'Failed to confirm purchase.';
+      const errorMessage =
+        (error as AxiosErrorType).response?.data?.message ||
+        'Failed to confirm purchase.';
       toast.error(errorMessage);
       console.error('Confirm purchase failed:', error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // **MODIFICATION 2: Add the handleConfirmDelivery function**
+  const handleConfirmDelivery = async (reference: string) => {
+    setActionLoading(reference);
+    try {
+      const response = await api.put<PaidOrderResponse>(
+        `/admin/orders/confirm/delivery/${reference}`,
+      );
+      toast.success(response.data.message);
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.reference === reference
+            ? { ...order, status: 'delivered' }
+            : order,
+        ),
+      );
+    } catch (error) {
+      const errorMessage =
+        (error as AxiosErrorType).response?.data?.message ||
+        'Failed to confirm delivery.';
+      toast.error(errorMessage);
+      console.error('Confirm delivery failed:', error);
     } finally {
       setActionLoading(null);
     }
@@ -136,7 +166,7 @@ const OrdersPage = () => {
       await api.delete(`/admin/orders/${reference}`);
       toast.success('Order deleted successfully.');
       setOrders((prevOrders) =>
-        prevOrders.filter((order) => order._id !== orderId)
+        prevOrders.filter((order) => order._id !== orderId),
       );
     } catch (error) {
       toast.error('Failed to delete order. Please try again.');
@@ -183,7 +213,7 @@ const OrdersPage = () => {
         <main
           className={cn(
             'flex-1 p-4 sm:p-6 transition-all duration-300 ease-in-out',
-            isCollapsed ? 'md:ml-20' : 'md:ml-64'
+            isCollapsed ? 'md:ml-20' : 'md:ml-64',
           )}
         >
           <div className="space-y-6">
@@ -212,15 +242,27 @@ const OrdersPage = () => {
                     <CardHeader>
                       <CardTitle className="flex justify-between items-center">
                         Order #{order.reference}
+                        {/* **MODIFICATION 3: Change Badge color based on status** */}
                         <Badge
-                          variant={order.status === 'paid' ? 'default' : 'secondary'}
-                          className="capitalize"
+                          className={cn(
+                            'capitalize',
+                            order.status === 'paid' &&
+                              'bg-blue-500 text-white hover:bg-blue-600',
+                            order.status === 'delivered' &&
+                              'bg-green-500 text-white hover:bg-green-600',
+                          )}
                         >
                           {order.status}
                         </Badge>
                       </CardTitle>
                       <CardDescription>
                         Client: {order.clientName}
+                        {/* **MODIFICATION 4: Display location if available** */}
+                        {order.location && (
+                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Location: {order.location}
+                          </p>
+                        )}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -239,9 +281,10 @@ const OrdersPage = () => {
                         {order.status === 'pending' && (
                           <>
                             <Button
-                              // Removed variant="default" and added custom Tailwind classes
                               className="w-full bg-blue-500 text-white hover:bg-blue-600"
-                              onClick={() => handleConfirmPurchase(order.reference)}
+                              onClick={() =>
+                                handleConfirmPurchase(order.reference)
+                              }
                               disabled={actionLoading === order.reference}
                             >
                               {actionLoading === order.reference ? (
@@ -253,16 +296,37 @@ const OrdersPage = () => {
                             </Button>
                             <Button
                               variant="outline"
-                              onClick={() => router.push(`/admin/orders/edit/${order.reference}`)}
+                              onClick={() =>
+                                router.push(`/admin/orders/edit/${order.reference}`)
+                              }
                             >
                               <Edit className="w-4 h-4 mr-2" />
                               Edit Order
                             </Button>
                           </>
                         )}
-                        
-                        {/* Actions for paid orders, but also available for pending */}
+
+                        {/* **MODIFICATION 5: Add Confirm Delivery button for paid orders** */}
                         {order.status === 'paid' && (
+                          <Button
+                            className="w-full bg-green-500 text-white hover:bg-green-600"
+                            onClick={() =>
+                              handleConfirmDelivery(order.reference)
+                            }
+                            disabled={actionLoading === order.reference}
+                          >
+                            {actionLoading === order.reference ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Truck className="w-4 h-4 mr-2" />
+                            )}
+                            Confirm Delivery
+                          </Button>
+                        )}
+
+                        {/* Actions for paid and delivered orders */}
+                        {(order.status === 'paid' ||
+                          order.status === 'delivered') && (
                           <div className="space-y-2">
                             <h3 className="font-semibold">Receipt</h3>
                             <div className="grid grid-cols-2 gap-2">
@@ -271,7 +335,11 @@ const OrdersPage = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Button variant="outline" className="w-full" disabled={!order.receiptPdf}>
+                                <Button
+                                  variant="outline"
+                                  className="w-full"
+                                  disabled={!order.receiptPdf}
+                                >
                                   <FileText className="w-4 h-4 mr-2" />
                                   Preview PDF
                                 </Button>
@@ -281,13 +349,23 @@ const OrdersPage = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                <Button variant="outline" className="w-full" disabled={!order.receiptImage}>
+                                <Button
+                                  variant="outline"
+                                  className="w-full"
+                                  disabled={!order.receiptImage}
+                                >
                                   <ImageIcon className="w-4 h-4 mr-2" />
                                   Preview Image
                                 </Button>
                               </a>
                               <Button
-                                onClick={() => order.receiptPdf && handleDownload(order.receiptPdf, `receipt-${order.reference}.pdf`)}
+                                onClick={() =>
+                                  order.receiptPdf &&
+                                  handleDownload(
+                                    order.receiptPdf,
+                                    `receipt-${order.reference}.pdf`,
+                                  )
+                                }
                                 className="w-full"
                                 disabled={!order.receiptPdf}
                               >
@@ -295,7 +373,13 @@ const OrdersPage = () => {
                                 Download PDF
                               </Button>
                               <Button
-                                onClick={() => order.receiptImage && handleDownload(order.receiptImage, `receipt-${order.reference}.jpg`)}
+                                onClick={() =>
+                                  order.receiptImage &&
+                                  handleDownload(
+                                    order.receiptImage,
+                                    `receipt-${order.reference}.jpg`,
+                                  )
+                                }
                                 className="w-full"
                                 disabled={!order.receiptImage}
                               >
@@ -317,13 +401,16 @@ const OrdersPage = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the order.
+                                This action cannot be undone. This will
+                                permanently delete the order.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDeleteOrder(order._id, order.reference)}
+                                onClick={() =>
+                                  handleDeleteOrder(order._id, order.reference)
+                                }
                                 disabled={actionLoading === order._id}
                               >
                                 {actionLoading === order._id ? (

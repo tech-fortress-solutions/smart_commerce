@@ -13,9 +13,9 @@ const { addCreateRecieptJob } = require('../jobs/createReciepts/queue');
 // stage order controller
 const stageOrderController = async (req, res, next) => {
     try {
-        const { clientName, products, currency, clientId  } = req.body;
+        const { clientName, products, currency, clientId, location } = req.body;
         // validate order data
-        if (!clientName || !products || !currency) {
+        if (!clientName || !products || !currency || !location) {
             throw new AppError('Invalid order data', 400);
         }
         if (!Array.isArray(products) || products.length === 0) {
@@ -37,6 +37,7 @@ const stageOrderController = async (req, res, next) => {
 
             })),
             reference,
+            location: sanitize(location), // Sanitize location input
             currency: sanitize(currency), // Sanitize currency input
         };
 
@@ -59,6 +60,7 @@ const stageOrderController = async (req, res, next) => {
             products: orderData.products,
             totalAmount: orderData.totalAmount,
             reference: stagedReference,
+            location: orderData.location,
             currency: orderData.currency || 'NGN', // Default to 'NGN' if not provided
         });
 
@@ -107,9 +109,10 @@ const retrieveOrderController = async (req, res, next) => {
 // Create a new order controller
 const createOrderController = async (req, res, next) => {
     try {
-        const { clientName, products, totalAmount, clientId } = req.body;
+        const { clientName, products, totalAmount, clientId, location } = req.body;
+        console.log('Create Order Request Body:', req.body); // Debug log
         // validate order data
-        if (!clientName || !products || !totalAmount) {
+        if (!clientName || !products || !totalAmount || !location) {
             throw new AppError('Invalid order data', 400);
         }
         if (!Array.isArray(products) || products.length === 0) {
@@ -134,6 +137,7 @@ const createOrderController = async (req, res, next) => {
             })),
             totalAmount: parseInt(sanitize(totalAmount), 10), // Ensure totalAmount is an integer
             reference: sanitize(reference),
+            location: sanitize(location), // Sanitize location input
         };
 
         // validate total amount matches with products and quantity
@@ -360,6 +364,10 @@ const updateOrderController = async (req, res, next) => {
             return next(new AppError('Cannot edit a paid order', 400));
         }
 
+        if (order.status === 'delivered') {
+            return next(new AppError('Cannot edit a delivered order', 400));
+        }
+
         // get updated order data from request body
         const { clientName, products, currency, clientId } = req.body;
         // create order data and validate
@@ -446,9 +454,49 @@ const getUserOrdersController = async (req, res, next) => {
 };
 
 
+// Confirm delivery controller
+const confirmDeliveryController = async (req, res, next) => {
+    try {
+        const { reference } = req.params;
+        if (!reference) {
+            return next(new AppError('No reference provided', 400));
+        }
+
+        // Get order from database
+        const order = await getOrderByReferenceService(reference);
+        if (!order) {
+            return next(new AppError('Order not found', 404));
+        }
+
+        // Check if order status allows confirming delivery
+        if (order.status !== 'paid') {
+            return next(new AppError('Only paid orders can be marked as delivered', 400));
+        }
+
+        // Update order status to 'delivered'
+        const updatedOrder = await updateOrderService(reference, { status: 'delivered' });
+        if (!updatedOrder) {
+            return next(new AppError('Failed to update order status', 500));
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Order marked as delivered successfully',
+            data: updatedOrder.toObject(), // Convert Mongoose document to plain object
+        });
+    } catch (error) {
+        if (error instanceof AppError) {
+            return next(error); // Pass custom AppError to the error handler
+        }
+        console.error('Error confirming delivery:', error);
+        return next(new AppError('Failed to confirm delivery', 500));
+    }
+};
+
+
 // export order controller
 module.exports = {
     stageOrderController, retrieveOrderController, createOrderController, getAllOrdersController,
     getOrderByReferenceController, confirmPurchaseController, deleteOrderController, updateOrderController,
-    getUserOrdersController
+    getUserOrdersController, confirmDeliveryController
 };

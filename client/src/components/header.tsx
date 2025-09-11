@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@/components/ui/popover'
-import { Filter, Search, ShoppingCart, User, X, Plus, Minus, Loader2, MessageCircle, ShoppingBag, LogOut } from 'lucide-react'
+import { Filter, Search, ShoppingCart, User, X, Plus, Minus, ShoppingBag, LogOut } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { toast } from 'sonner'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import Image from 'next/image'
 import api from '@/lib/axios'
+import { CheckoutDialog } from './checkoutDialog'
 
 // --- Cart Item Component ---
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,60 +49,6 @@ const CartItem: FC<{ item: any }> = ({ item }) => {
   );
 };
 
-
-// --- Checkout Dialog Component ---
-const CheckoutDialog: FC<{ isOpen: boolean; onOpenChange: (open: boolean) => void }> = ({ isOpen, onOpenChange }) => {
-  const [clientName, setClientName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { checkout } = useCart();
-
-  const handleCheckout = async () => {
-    if (!clientName.trim()) {
-      toast.error('Please enter your name to proceed.');
-      return;
-    }
-
-    setLoading(true);
-    const whatsappLink = await checkout(clientName);
-    setLoading(false);
-
-    if (whatsappLink) {
-      window.open(whatsappLink, '_blank');
-      onOpenChange(false); // Close the dialog
-    }
-  };
-
-  return (
-    <Popover open={isOpen} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        {/* Hidden trigger for control */}
-        <div className="hidden" />
-      </PopoverTrigger>
-      <PopoverContent align="center" side="top" className="w-80 p-4">
-        <div className="space-y-4">
-          <h4 className="font-semibold text-lg">Enter Your Name</h4>
-          <p className="text-sm text-muted-foreground">Please enter your name to complete the order via WhatsApp.</p>
-          <Input
-            placeholder="Your Full Name"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button className="flex-1 bg-blue-600 hover:bg-blue-500" onClick={handleCheckout} disabled={loading}>
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <MessageCircle className="mr-2 h-4 w-4" />
-              )}
-              Continue to WhatsApp
-            </Button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-};
 
 // --- Header Component ---
 export default function Header() {
