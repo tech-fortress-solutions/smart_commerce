@@ -14,7 +14,8 @@ const orderSchema = new mongoose.Schema({
     }],
     totalAmount: { type: Number, required: true, min: 0 }, // Total amount for the order
     reference: { type: String, required: true, unique: true }, // Unique reference for the order
-    status: { type: String, enum: ['pending', 'paid'], default: 'pending' }, // Order status, default is 'pending'
+    status: { type: String, enum: ['pending', 'paid', 'delivered'], default: 'pending' }, // Order status, default is 'pending'
+    location: { type: String, required: false }, // Delivery location
     paidAt: { type: Date, required: false }, // Date when the order was paid
     currency: { type: String, default: 'NGN' }, // Default currency is NGN
     receiptPdf: { type: String, required: false }, // URL to the receipt PDF

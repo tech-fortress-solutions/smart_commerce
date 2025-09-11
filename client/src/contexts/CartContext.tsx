@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, useContext, type FC, type ReactNode, useCallback } from 'react'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
+import { useAuth } from './AuthContext'
 
 type CartItem = {
   _id: string;
@@ -22,7 +23,7 @@ type CartContextType = {
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
-  checkout: (clientName: string) => Promise<string | null>;
+  checkout: (clientName: string, location: string) => Promise<string | null>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -45,6 +46,7 @@ const getInitialCart = (): CartItem[] => {
 };
 
 export const CartProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCart);
 
   useEffect(() => {
@@ -98,14 +100,26 @@ export const CartProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const cartTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  const checkout = async (clientName: string) => {
+  const checkout = async (clientName: string, location: string) => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty.");
       return null;
     }
 
+    if (!location || location.trim() === '') {
+      toast.error("Please provide your location to proceed with the checkout.");
+      return null;
+    }
+
     try {
-      const orderData = {
+      const orderData: {
+        clientName: string;
+        products: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+        totalAmount: number;
+        currency: string;
+        location: string;
+        clientId?: string;
+      } = {
         clientName: clientName,
         products: cartItems.map(item => ({
           product: item._id,
@@ -116,8 +130,12 @@ export const CartProvider: FC<{ children: ReactNode }> = ({ children }) => {
         })),
         totalAmount: cartTotal,
         currency: "NGN",
+        location: location,
       };
-
+      
+      if (user) {
+        orderData.clientId = user._id;
+      }
       const response = await api.post('/admin/orders/stage', orderData);
       const { checkoutUrl } = response.data;
       

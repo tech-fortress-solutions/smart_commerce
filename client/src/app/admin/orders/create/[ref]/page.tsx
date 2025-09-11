@@ -9,7 +9,6 @@ import { Loader2, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute'; // Assuming this component exists
 import api from '@/lib/axios'; // Assuming this is your configured axios instance
-import { set } from 'date-fns';
 
 // Define the data structures for type safety
 interface Product {
@@ -23,6 +22,8 @@ interface Product {
 
 interface OrderFormState {
     clientName: string;
+    clientId?: string;
+    location: string;
     products: Product[];
     totalAmount: number;
     currency: string;
@@ -68,6 +69,8 @@ export default function CreateOrderPage({ params }: { params: Promise<{ ref: str
                     // Set the initial form data
                     setFormData({
                         clientName: data.clientName,
+                        clientId: data.clientId,
+                        location: data.location || '',
                         products: data.products,
                         totalAmount: calculateTotal(data.products),
                         currency: data.currency,
@@ -116,11 +119,19 @@ export default function CreateOrderPage({ params }: { params: Promise<{ ref: str
         e.preventDefault();
         if (!formData) return;
 
+        // Add location validation logic
+        if (!formData.location || formData.location.trim() === '') {
+            toast.error('Please enter the delivery location.');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
             const payload = {
                 clientName: formData.clientName,
+                ... (formData.clientId && { clientId: formData.clientId }), // Include clientId if it exists
+                location: formData.location,
                 products: formData.products.map(p => ({
                     product: p.product, // Assumes _id is the product reference
                     description: p.description,
@@ -185,6 +196,18 @@ export default function CreateOrderPage({ params }: { params: Promise<{ ref: str
                                 type="text"
                                 value={formData?.clientName || ''}
                                 onChange={(e) => setFormData(prev => prev ? { ...prev, clientName: e.target.value } : null)}
+                                className="w-full"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label htmlFor="location" className="text-sm font-medium text-gray-700 dark:text-gray-300">Delivery Location</label>
+                            <Input
+                                id="location"
+                                type="text"
+                                value={formData?.location || ''}
+                                onChange={(e) => setFormData(prev => prev ? { ...prev, location: e.target.value } : null)}
                                 className="w-full"
                                 required
                             />
